@@ -118,7 +118,13 @@ namespace FileCabinetApp
             string lastName = Console.ReadLine();
             Console.Write("Date of birth: ");
             DateTime dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-            int id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth);
+            Console.Write("Weight: ");
+            short weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+            Console.Write("Account: ");
+            decimal account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+            Console.Write("Letter: ");
+            char letter = char.Parse(Console.ReadLine());
+            int id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
             Console.WriteLine($"Record #{id} is created.");
         }
 
@@ -127,8 +133,9 @@ namespace FileCabinetApp
             var records = fileCabinetService.GetRecords();
             foreach (var record in records)
             {
-                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}," +
-                    $" {record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}");
+                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
+                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
+                    $"{record.Weight}, {record.Account}, {record.Letter}");
             }
         }
     }
