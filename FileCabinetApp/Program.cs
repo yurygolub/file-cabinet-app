@@ -20,6 +20,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("stat", Stat),
             new Tuple<string, Action<string>>("create", Create),
             new Tuple<string, Action<string>>("list", List),
+            new Tuple<string, Action<string>>("edit", Edit),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -29,6 +30,7 @@ namespace FileCabinetApp
             new string[] { "stat", "displays statistics on records", "The 'stat' command displays statistics on records." },
             new string[] { "create", "creates a record", "The 'create' command creates a record." },
             new string[] { "list", "returns list of records added to service", "The 'list' command returns list of records added to service." },
+            new string[] { "edit", "edits a record", "The 'edit' command edits a record." },
         };
 
         public static void Main(string[] args)
@@ -153,6 +155,62 @@ namespace FileCabinetApp
                 Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
                     $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
                     $"{record.Weight}, {record.Account}, {record.Letter}");
+            }
+        }
+
+        private static void Edit(string parameters)
+        {
+            if (!int.TryParse(parameters, out int id))
+            {
+                Console.WriteLine($"The '{parameters}' is incorrect parameters");
+                return;
+            }
+
+            try
+            {
+                fileCabinetService.IsExist(id);
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
+
+            Input(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
+            fileCabinetService.EditRecord(id, firstName, lastName, dateOfBirth, weight, account, letter);
+            Console.WriteLine($"Record #{id} is updated.");
+        }
+
+        private static void Input(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter)
+        {
+            while (true)
+            {
+                Console.Write("First name: ");
+                firstName = Console.ReadLine();
+                Console.Write("Last name: ");
+                lastName = Console.ReadLine();
+                Console.Write("Date of birth: ");
+                dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Weight: ");
+                weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Account: ");
+                account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Letter: ");
+                letter = char.Parse(Console.ReadLine());
+
+                try
+                {
+                    FileCabinetService.CheckInput(firstName, lastName, dateOfBirth, weight, account, letter);
+                    break;
+                }
+                catch (ArgumentNullException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                catch (ArgumentException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
         }
     }
