@@ -112,19 +112,36 @@ namespace FileCabinetApp
 
         private static void Create(string parameters)
         {
-            Console.Write("First name: ");
-            string firstName = Console.ReadLine();
-            Console.Write("Last name: ");
-            string lastName = Console.ReadLine();
-            Console.Write("Date of birth: ");
-            DateTime dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-            Console.Write("Weight: ");
-            short weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-            Console.Write("Account: ");
-            decimal account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-            Console.Write("Letter: ");
-            char letter = char.Parse(Console.ReadLine());
-            int id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
+            int id;
+            while (true)
+            {
+                Console.Write("First name: ");
+                string firstName = Console.ReadLine();
+                Console.Write("Last name: ");
+                string lastName = Console.ReadLine();
+                Console.Write("Date of birth: ");
+                DateTime dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Weight: ");
+                short weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Account: ");
+                decimal account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                Console.Write("Letter: ");
+                char letter = char.Parse(Console.ReadLine());
+                try
+                {
+                    id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
+                    break;
+                }
+                catch (ArgumentNullException argNullEx)
+                {
+                    Console.WriteLine(argNullEx.Message);
+                }
+                catch (ArgumentException argEx)
+                {
+                    Console.WriteLine(argEx.Message);
+                }
+            }
+
             Console.WriteLine($"Record #{id} is created.");
         }
 
