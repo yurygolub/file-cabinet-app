@@ -238,6 +238,10 @@ namespace FileCabinetApp
             {
                 result = fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
+            else if (string.Equals("lastname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
+            {
+                result = fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+            }
             else
             {
                 Console.WriteLine($"The '{arrayOfParameters[IndexPropertyName]}' property is not exist.");
