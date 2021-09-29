@@ -21,6 +21,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("create", Create),
             new Tuple<string, Action<string>>("list", List),
             new Tuple<string, Action<string>>("edit", Edit),
+            new Tuple<string, Action<string>>("find", Find),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -31,6 +32,7 @@ namespace FileCabinetApp
             new string[] { "create", "creates a record", "The 'create' command creates a record." },
             new string[] { "list", "returns list of records added to service", "The 'list' command returns list of records added to service." },
             new string[] { "edit", "edits a record", "The 'edit' command edits a record." },
+            new string[] { "find", "finds a record", "The 'find' command finds a record." },
         };
 
         public static void Main(string[] args)
@@ -211,6 +213,41 @@ namespace FileCabinetApp
                 {
                     Console.WriteLine(ex.Message);
                 }
+            }
+        }
+
+        private static void Find(string parameters)
+        {
+            const int IndexPropertyName = 0;
+            const int IndexOfTextToSearch = 1;
+            if (string.IsNullOrEmpty(parameters))
+            {
+                Console.WriteLine($"You should write the parameters.");
+                return;
+            }
+
+            string[] arrayOfParameters = parameters.Split(" ", 2);
+            if (arrayOfParameters.Length < 2)
+            {
+                Console.WriteLine($"You should write the text to search for.");
+                return;
+            }
+
+            FileCabinetRecord[] result = Array.Empty<FileCabinetRecord>();
+            if (string.Equals("firstname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
+            {
+                result = fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+            }
+            else
+            {
+                Console.WriteLine($"The '{arrayOfParameters[IndexPropertyName]}' property is not exist.");
+            }
+
+            foreach (var record in result)
+            {
+                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
+                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
+                    $"{record.Weight}, {record.Account}, {record.Letter}");
             }
         }
     }
