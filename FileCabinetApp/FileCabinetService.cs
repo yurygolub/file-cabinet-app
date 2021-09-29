@@ -164,5 +164,19 @@ namespace FileCabinetApp
 
             return res.ToArray();
         }
+
+        public FileCabinetRecord[] FindByDateOfBirth(DateTime dateOfBirth)
+        {
+            List<FileCabinetRecord> res = new List<FileCabinetRecord>();
+            foreach (var item in this.list)
+            {
+                if (DateTime.Equals(item.DateOfBirth, dateOfBirth))
+                {
+                    res.Add(item);
+                }
+            }
+
+            return res.ToArray();
+        }
     }
 }

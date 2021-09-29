@@ -242,6 +242,17 @@ namespace FileCabinetApp
             {
                 result = fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
+            else if (string.Equals("dateofbirth", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (DateTime.TryParse(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty), out DateTime dateOfBirth))
+                {
+                    result = fileCabinetService.FindByDateOfBirth(dateOfBirth);
+                }
+                else
+                {
+                    Console.WriteLine($"The following date '{arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty)}' has incorrect format.");
+                }
+            }
             else
             {
                 Console.WriteLine($"The '{arrayOfParameters[IndexPropertyName]}' property is not exist.");
