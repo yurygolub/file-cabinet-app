@@ -7,6 +7,8 @@ namespace FileCabinetApp
     {
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
 
+        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
+
         public static void CheckInput(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
         {
             if (string.IsNullOrWhiteSpace(firstName))
@@ -52,45 +54,7 @@ namespace FileCabinetApp
 
         public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
         {
-            if (string.IsNullOrWhiteSpace(firstName))
-            {
-                throw new ArgumentNullException(nameof(firstName));
-            }
-
-            if (firstName.Length < 2 || firstName.Length > 60)
-            {
-                throw new ArgumentException("firstName length is less than 2 or more than 60.");
-            }
-
-            if (string.IsNullOrWhiteSpace(lastName))
-            {
-                throw new ArgumentNullException(nameof(lastName));
-            }
-
-            if (lastName.Length < 2 || lastName.Length > 60)
-            {
-                throw new ArgumentException("lastName length is less than 2 or more than 60.");
-            }
-
-            if (dateOfBirth < new DateTime(1950, 1, 1) || dateOfBirth > DateTime.Now)
-            {
-                throw new ArgumentException("dateOfBirth is less than 01-Jan-1950 or more than now.");
-            }
-
-            if (weight < 1 || weight > 500)
-            {
-                throw new ArgumentException("weight is less than 1 or more than 500.");
-            }
-
-            if (account < 0)
-            {
-                throw new ArgumentException("account is less than zero.");
-            }
-
-            if (!char.IsLetter(letter))
-            {
-                throw new ArgumentException("letter is not a letter.");
-            }
+            CheckInput(firstName, lastName, dateOfBirth, weight, account, letter);
 
             var record = new FileCabinetRecord
             {
@@ -103,8 +67,18 @@ namespace FileCabinetApp
                 Letter = letter,
             };
 
-            this.list.Add(record);
+            if (this.firstNameDictionary.ContainsKey(firstName))
+            {
+                this.firstNameDictionary[firstName].Add(record);
+            }
+            else
+            {
+                List<FileCabinetRecord> temp = new List<FileCabinetRecord>();
+                temp.Add(record);
+                this.firstNameDictionary.Add(firstName, temp);
+            }
 
+            this.list.Add(record);
             return record.Id;
         }
 
@@ -139,8 +113,13 @@ namespace FileCabinetApp
 
         public FileCabinetRecord[] FindByFirstName(string firstName)
         {
+            if (!this.firstNameDictionary.ContainsKey(firstName))
+            {
+                return Array.Empty<FileCabinetRecord>();
+            }
+
             List<FileCabinetRecord> res = new List<FileCabinetRecord>();
-            foreach (var item in this.list)
+            foreach (var item in this.firstNameDictionary[firstName])
             {
                 if (string.Equals(item.FirstName, firstName, StringComparison.InvariantCultureIgnoreCase))
                 {
