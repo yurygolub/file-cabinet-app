@@ -110,48 +110,25 @@ namespace FileCabinetApp
 
         private static void Stat(string parameters)
         {
-            var recordsCount = Program.fileCabinetService.GetStat();
+            int recordsCount = Program.fileCabinetService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
         }
 
         private static void Create(string parameters)
         {
-            int id;
-            while (true)
-            {
-                Console.Write("First name: ");
-                string firstName = Console.ReadLine();
-                Console.Write("Last name: ");
-                string lastName = Console.ReadLine();
-                Console.Write("Date of birth: ");
-                DateTime dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-                Console.Write("Weight: ");
-                short weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-                Console.Write("Account: ");
-                decimal account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
-                Console.Write("Letter: ");
-                char letter = char.Parse(Console.ReadLine());
-                try
-                {
-                    id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
-                    break;
-                }
-                catch (ArgumentNullException argNullEx)
-                {
-                    Console.WriteLine(argNullEx.Message);
-                }
-                catch (ArgumentException argEx)
-                {
-                    Console.WriteLine(argEx.Message);
-                }
-            }
-
+            InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
+            int id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
             Console.WriteLine($"Record #{id} is created.");
         }
 
         private static void List(string parameters)
         {
-            var records = fileCabinetService.GetRecords();
+            FileCabinetRecord[] records = fileCabinetService.GetRecords();
+            PrintRecords(records);
+        }
+
+        private static void PrintRecords(FileCabinetRecord[] records)
+        {
             foreach (var record in records)
             {
                 Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
@@ -178,27 +155,48 @@ namespace FileCabinetApp
                 return;
             }
 
-            Input(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
+            InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
             fileCabinetService.EditRecord(id, firstName, lastName, dateOfBirth, weight, account, letter);
             Console.WriteLine($"Record #{id} is updated.");
         }
 
-        private static void Input(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter)
+        private static void InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter)
         {
             while (true)
             {
                 Console.Write("First name: ");
                 firstName = Console.ReadLine();
+
                 Console.Write("Last name: ");
                 lastName = Console.ReadLine();
+
                 Console.Write("Date of birth: ");
-                dateOfBirth = DateTime.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                if (!DateTime.TryParse(Console.ReadLine(), out dateOfBirth))
+                {
+                    Console.WriteLine("Incorrect format.");
+                    continue;
+                }
+
                 Console.Write("Weight: ");
-                weight = short.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                if (!short.TryParse(Console.ReadLine(), out weight))
+                {
+                    Console.WriteLine("Incorrect format.");
+                    continue;
+                }
+
                 Console.Write("Account: ");
-                account = decimal.Parse(Console.ReadLine(), System.Globalization.CultureInfo.InvariantCulture);
+                if (!decimal.TryParse(Console.ReadLine(), out account))
+                {
+                    Console.WriteLine("Incorrect format.");
+                    continue;
+                }
+
                 Console.Write("Letter: ");
-                letter = char.Parse(Console.ReadLine());
+                if (!char.TryParse(Console.ReadLine(), out letter))
+                {
+                    Console.WriteLine("Incorrect format.");
+                    continue;
+                }
 
                 try
                 {
@@ -220,6 +218,7 @@ namespace FileCabinetApp
         {
             const int IndexPropertyName = 0;
             const int IndexOfTextToSearch = 1;
+
             if (string.IsNullOrEmpty(parameters))
             {
                 Console.WriteLine($"You should write the parameters.");
@@ -258,12 +257,7 @@ namespace FileCabinetApp
                 Console.WriteLine($"The '{arrayOfParameters[IndexPropertyName]}' property is not exist.");
             }
 
-            foreach (var record in result)
-            {
-                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
-                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
-                    $"{record.Weight}, {record.Account}, {record.Letter}");
-            }
+            PrintRecords(result);
         }
     }
 }
