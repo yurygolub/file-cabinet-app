@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace FileCabinetApp
 {
+    /// <summary>
+     /// Provides methods for working with file cabinet.
+     /// </summary>
     public class FileCabinetService
     {
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
@@ -13,6 +16,20 @@ namespace FileCabinetApp
 
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
 
+        /// <summary>
+        /// Checks the fields of record.
+        /// </summary>
+        /// <param name="firstName">First name.</param>
+        /// <param name="lastName">Last name.</param>
+        /// <param name="dateOfBirth">Date of birth.</param>
+        /// <param name="weight">Weight.</param>
+        /// <param name="account">Account.</param>
+        /// <param name="letter">Letter.</param>
+        /// <exception cref="ArgumentNullException">Throw when first name or last name is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// Throw when first name or last name length is less than 2 or more than 60,
+        /// date of birth is less than 01-Jan-1950 or more than now, weight is less than 1 or more than 500, account less than 0 and letter is not a letter.
+        /// </exception>
         public static void CheckInput(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
         {
             if (string.IsNullOrWhiteSpace(firstName))
@@ -56,6 +73,16 @@ namespace FileCabinetApp
             }
         }
 
+        /// <summary>
+        /// Сreates a record with the specified parameters.
+        /// </summary>
+        /// <param name="firstName">First name.</param>
+        /// <param name="lastName">Last name.</param>
+        /// <param name="dateOfBirth">Date of birth.</param>
+        /// <param name="weight">Weight.</param>
+        /// <param name="account">Account.</param>
+        /// <param name="letter">Letter.</param>
+        /// <returns>Id of the created record.</returns>
         public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
         {
             CheckInput(firstName, lastName, dateOfBirth, weight, account, letter);
@@ -79,16 +106,34 @@ namespace FileCabinetApp
             return record.Id;
         }
 
+        /// <summary>
+        /// Returns the array of records.
+        /// </summary>
+        /// <returns>The array of records.</returns>
         public FileCabinetRecord[] GetRecords()
         {
             return this.list.ToArray();
         }
 
+        /// <summary>
+        /// Returns the count of records.
+        /// </summary>
+        /// <returns>The count of records.</returns>
         public int GetStat()
         {
             return this.list.Count;
         }
 
+        /// <summary>
+        /// Edits a record with the specified parameters.
+        /// </summary>
+        /// <param name="id">Id of editing record.</param>
+        /// <param name="firstName">New first name.</param>
+        /// <param name="lastName">New last name.</param>
+        /// <param name="dateOfBirth">New date of birth.</param>
+        /// <param name="weight">New weight.</param>
+        /// <param name="account">New account.</param>
+        /// <param name="letter">New letter.</param>
         public void EditRecord(int id, string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
         {
             this.IsExist(id);
@@ -105,6 +150,11 @@ namespace FileCabinetApp
             this.list[id - 1].Letter = letter;
         }
 
+        /// <summary>
+        /// Checks if there is a record with the specified id.
+        /// </summary>
+        /// <param name="id">Record id.</param>
+        /// <exception cref="ArgumentException">Throw when there is not record with specified id.</exception>
         public void IsExist(int id)
         {
             if (id < 1 || id > this.list.Count)
@@ -113,6 +163,11 @@ namespace FileCabinetApp
             }
         }
 
+        /// <summary>
+        /// Finds all records with specified first name.
+        /// </summary>
+        /// <param name="firstName">First name.</param>
+        /// <returns>Returns the array of found records.</returns>
         public FileCabinetRecord[] FindByFirstName(string firstName)
         {
             if (!this.firstNameDictionary.ContainsKey(firstName))
@@ -123,6 +178,11 @@ namespace FileCabinetApp
             return this.firstNameDictionary[firstName].ToArray();
         }
 
+        /// <summary>
+        /// Finds all records with specified last name.
+        /// </summary>
+        /// <param name="lastName">Last name.</param>
+        /// <returns>Returns the array of found records.</returns>
         public FileCabinetRecord[] FindByLastName(string lastName)
         {
             if (!this.lastNameDictionary.ContainsKey(lastName))
@@ -133,6 +193,11 @@ namespace FileCabinetApp
             return this.lastNameDictionary[lastName].ToArray();
         }
 
+        /// <summary>
+        /// Finds all records with specified date of birth.
+        /// </summary>
+        /// <param name="dateOfBirth">Date of birth.</param>
+        /// <returns>Returns the array of found records.</returns>
         public FileCabinetRecord[] FindByDateOfBirth(DateTime dateOfBirth)
         {
             if (!this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
