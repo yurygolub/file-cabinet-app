@@ -150,10 +150,11 @@
             Main program class.
             </summary>
         </member>
-        <member name="M:FileCabinetApp.Program.Main">
+        <member name="M:FileCabinetApp.Program.Main(System.String[])">
             <summary>
             The entry point of application.
             </summary>
+            <param name="args">Application command line parameter.</param>
         </member>
         <member name="T:FileCabinetApp.Record">
             <summary>
