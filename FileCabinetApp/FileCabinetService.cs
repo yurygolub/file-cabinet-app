@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace FileCabinetApp
 {
     /// <summary>
-     /// Provides methods for working with file cabinet.
-     /// </summary>
+    /// Provides methods for working with file cabinet.
+    /// </summary>
     public class FileCabinetService
     {
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
@@ -17,93 +17,34 @@ namespace FileCabinetApp
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
 
         /// <summary>
-        /// Checks the fields of record.
-        /// </summary>
-        /// <param name="firstName">First name.</param>
-        /// <param name="lastName">Last name.</param>
-        /// <param name="dateOfBirth">Date of birth.</param>
-        /// <param name="weight">Weight.</param>
-        /// <param name="account">Account.</param>
-        /// <param name="letter">Letter.</param>
-        /// <exception cref="ArgumentNullException">Throw when first name or last name is null.</exception>
-        /// <exception cref="ArgumentException">
-        /// Throw when first name or last name length is less than 2 or more than 60,
-        /// date of birth is less than 01-Jan-1950 or more than now, weight is less than 1 or more than 500, account less than 0 and letter is not a letter.
-        /// </exception>
-        public static void CheckInput(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
-        {
-            if (string.IsNullOrWhiteSpace(firstName))
-            {
-                throw new ArgumentNullException(nameof(firstName));
-            }
-
-            if (firstName.Length < 2 || firstName.Length > 60)
-            {
-                throw new ArgumentException("firstName length is less than 2 or more than 60.");
-            }
-
-            if (string.IsNullOrWhiteSpace(lastName))
-            {
-                throw new ArgumentNullException(nameof(lastName));
-            }
-
-            if (lastName.Length < 2 || lastName.Length > 60)
-            {
-                throw new ArgumentException("lastName length is less than 2 or more than 60.");
-            }
-
-            if (dateOfBirth < new DateTime(1950, 1, 1) || dateOfBirth > DateTime.Now)
-            {
-                throw new ArgumentException("dateOfBirth is less than 01-Jan-1950 or more than now.");
-            }
-
-            if (weight < 1 || weight > 500)
-            {
-                throw new ArgumentException("weight is less than 1 or more than 500.");
-            }
-
-            if (account < 0)
-            {
-                throw new ArgumentException("account is less than zero.");
-            }
-
-            if (!char.IsLetter(letter))
-            {
-                throw new ArgumentException("letter is not a letter.");
-            }
-        }
-
-        /// <summary>
         /// Сreates a record with the specified parameters.
         /// </summary>
-        /// <param name="firstName">First name.</param>
-        /// <param name="lastName">Last name.</param>
-        /// <param name="dateOfBirth">Date of birth.</param>
-        /// <param name="weight">Weight.</param>
-        /// <param name="account">Account.</param>
-        /// <param name="letter">Letter.</param>
+        /// <param name="record">Record.</param>
         /// <returns>Id of the created record.</returns>
-        public int CreateRecord(string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
+        public int CreateRecord(Record record)
         {
-            CheckInput(firstName, lastName, dateOfBirth, weight, account, letter);
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
 
-            var record = new FileCabinetRecord
+            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
             {
                 Id = this.list.Count + 1,
-                FirstName = firstName,
-                LastName = lastName,
-                DateOfBirth = dateOfBirth,
-                Weight = weight,
-                Account = account,
-                Letter = letter,
+                FirstName = record.FirstName,
+                LastName = record.LastName,
+                DateOfBirth = record.DateOfBirth,
+                Weight = record.Weight,
+                Account = record.Account,
+                Letter = record.Letter,
             };
 
-            UpdateDictionary(this.firstNameDictionary, record, firstName);
-            UpdateDictionary(this.lastNameDictionary, record, lastName);
-            UpdateDictionary(this.dateOfBirthDictionary, record, dateOfBirth);
+            UpdateDictionary(this.firstNameDictionary, fileCabinetRecord, record.FirstName);
+            UpdateDictionary(this.lastNameDictionary, fileCabinetRecord, record.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, fileCabinetRecord, record.DateOfBirth);
 
-            this.list.Add(record);
-            return record.Id;
+            this.list.Add(fileCabinetRecord);
+            return fileCabinetRecord.Id;
         }
 
         /// <summary>
@@ -128,26 +69,26 @@ namespace FileCabinetApp
         /// Edits a record with the specified parameters.
         /// </summary>
         /// <param name="id">Id of editing record.</param>
-        /// <param name="firstName">New first name.</param>
-        /// <param name="lastName">New last name.</param>
-        /// <param name="dateOfBirth">New date of birth.</param>
-        /// <param name="weight">New weight.</param>
-        /// <param name="account">New account.</param>
-        /// <param name="letter">New letter.</param>
-        public void EditRecord(int id, string firstName, string lastName, DateTime dateOfBirth, short weight, decimal account, char letter)
+        /// <param name="record">Record.</param>
+        public void EditRecord(int id, Record record)
         {
             this.IsExist(id);
 
-            UpdateDictionary(this.firstNameDictionary, this.list[id - 1], this.list[id - 1].FirstName, firstName);
-            UpdateDictionary(this.lastNameDictionary, this.list[id - 1], this.list[id - 1].LastName, lastName);
-            UpdateDictionary(this.dateOfBirthDictionary, this.list[id - 1], this.list[id - 1].DateOfBirth, dateOfBirth);
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
 
-            this.list[id - 1].FirstName = firstName;
-            this.list[id - 1].LastName = lastName;
-            this.list[id - 1].DateOfBirth = dateOfBirth;
-            this.list[id - 1].Weight = weight;
-            this.list[id - 1].Account = account;
-            this.list[id - 1].Letter = letter;
+            UpdateDictionary(this.firstNameDictionary, this.list[id - 1], this.list[id - 1].FirstName, record.FirstName);
+            UpdateDictionary(this.lastNameDictionary, this.list[id - 1], this.list[id - 1].LastName, record.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, this.list[id - 1], this.list[id - 1].DateOfBirth, record.DateOfBirth);
+
+            this.list[id - 1].FirstName = record.FirstName;
+            this.list[id - 1].LastName = record.LastName;
+            this.list[id - 1].DateOfBirth = record.DateOfBirth;
+            this.list[id - 1].Weight = record.Weight;
+            this.list[id - 1].Account = record.Account;
+            this.list[id - 1].Letter = record.Letter;
         }
 
         /// <summary>

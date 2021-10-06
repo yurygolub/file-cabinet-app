@@ -122,8 +122,8 @@ namespace FileCabinetApp
 
         private static void Create(string parameters)
         {
-            InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
-            int id = fileCabinetService.CreateRecord(firstName, lastName, dateOfBirth, weight, account, letter);
+            InputRecord(out Record record);
+            int id = fileCabinetService.CreateRecord(record);
             Console.WriteLine($"Record #{id} is created.");
         }
 
@@ -161,52 +161,54 @@ namespace FileCabinetApp
                 return;
             }
 
-            InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter);
-            fileCabinetService.EditRecord(id, firstName, lastName, dateOfBirth, weight, account, letter);
+            InputRecord(out Record record);
+            fileCabinetService.EditRecord(id, record);
             Console.WriteLine($"Record #{id} is updated.");
         }
 
-        private static void InputRecord(out string firstName, out string lastName, out DateTime dateOfBirth, out short weight, out decimal account, out char letter)
+        private static void InputRecord(out Record record)
         {
             while (true)
             {
                 Console.Write("First name: ");
-                firstName = Console.ReadLine();
+                string firstName = Console.ReadLine();
 
                 Console.Write("Last name: ");
-                lastName = Console.ReadLine();
+                string lastName = Console.ReadLine();
 
                 Console.Write("Date of birth: ");
-                if (!DateTime.TryParse(Console.ReadLine(), out dateOfBirth))
+                if (!DateTime.TryParse(Console.ReadLine(), out DateTime dateOfBirth))
                 {
                     Console.WriteLine("Incorrect format.");
                     continue;
                 }
 
                 Console.Write("Weight: ");
-                if (!short.TryParse(Console.ReadLine(), out weight))
+                if (!short.TryParse(Console.ReadLine(), out short weight))
                 {
                     Console.WriteLine("Incorrect format.");
                     continue;
                 }
 
                 Console.Write("Account: ");
-                if (!decimal.TryParse(Console.ReadLine(), out account))
+                if (!decimal.TryParse(Console.ReadLine(), out decimal account))
                 {
                     Console.WriteLine("Incorrect format.");
                     continue;
                 }
 
                 Console.Write("Letter: ");
-                if (!char.TryParse(Console.ReadLine(), out letter))
+                if (!char.TryParse(Console.ReadLine(), out char letter))
                 {
                     Console.WriteLine("Incorrect format.");
                     continue;
                 }
 
+                record = new Record(firstName, lastName, dateOfBirth, weight, account, letter);
+
                 try
                 {
-                    FileCabinetService.CheckInput(firstName, lastName, dateOfBirth, weight, account, letter);
+                    record.CheckInput();
                     break;
                 }
                 catch (ArgumentNullException ex)
