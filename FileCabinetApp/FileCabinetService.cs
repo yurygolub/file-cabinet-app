@@ -17,10 +17,10 @@ namespace FileCabinetApp
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
 
         /// <summary>
-        /// Checks the validity of the entered data.
+        /// Creates a record validator object.
         /// </summary>
-        /// <param name="record">Record.</param>
-        public abstract void ValidateParameters(Record record);
+        /// <returns>Record validator object.</returns>
+        public abstract IRecordValidator CreateValidator();
 
         /// <summary>
         /// Сreates a record with the specified parameters.
@@ -33,6 +33,8 @@ namespace FileCabinetApp
             {
                 throw new ArgumentNullException(nameof(record));
             }
+
+            this.CreateValidator().ValidateParameters(record);
 
             FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
             {
