@@ -14,7 +14,7 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
 
         private static bool isRunning = true;
-        private static FileCabinetService fileCabinetService = new FileCabinetService();
+        private static FileCabinetService fileCabinetCustomService = new FileCabinetCustomService();
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
         {
@@ -116,20 +116,20 @@ namespace FileCabinetApp
 
         private static void Stat(string parameters)
         {
-            int recordsCount = Program.fileCabinetService.GetStat();
+            int recordsCount = Program.fileCabinetCustomService.GetStat();
             Console.WriteLine($"{recordsCount} record(s).");
         }
 
         private static void Create(string parameters)
         {
             InputRecord(out Record record);
-            int id = fileCabinetService.CreateRecord(record);
+            int id = fileCabinetCustomService.CreateRecord(record);
             Console.WriteLine($"Record #{id} is created.");
         }
 
         private static void List(string parameters)
         {
-            FileCabinetRecord[] records = fileCabinetService.GetRecords();
+            FileCabinetRecord[] records = fileCabinetCustomService.GetRecords();
             PrintRecords(records);
         }
 
@@ -153,7 +153,7 @@ namespace FileCabinetApp
 
             try
             {
-                fileCabinetService.IsExist(id);
+                fileCabinetCustomService.IsExist(id);
             }
             catch (ArgumentException ex)
             {
@@ -162,7 +162,7 @@ namespace FileCabinetApp
             }
 
             InputRecord(out Record record);
-            fileCabinetService.EditRecord(id, record);
+            fileCabinetCustomService.EditRecord(id, record);
             Console.WriteLine($"Record #{id} is updated.");
         }
 
@@ -208,7 +208,7 @@ namespace FileCabinetApp
 
                 try
                 {
-                    record.CheckInput();
+                    fileCabinetCustomService.ValidateParameters(record);
                     break;
                 }
                 catch (ArgumentNullException ex)
@@ -243,17 +243,17 @@ namespace FileCabinetApp
             FileCabinetRecord[] result = Array.Empty<FileCabinetRecord>();
             if (string.Equals("firstname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
-                result = fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                result = fileCabinetCustomService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
             else if (string.Equals("lastname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
-                result = fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                result = fileCabinetCustomService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
             else if (string.Equals("dateofbirth", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
                 if (DateTime.TryParse(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty), out DateTime dateOfBirth))
                 {
-                    result = fileCabinetService.FindByDateOfBirth(dateOfBirth);
+                    result = fileCabinetCustomService.FindByDateOfBirth(dateOfBirth);
                 }
                 else
                 {

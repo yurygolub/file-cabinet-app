@@ -67,56 +67,5 @@ namespace FileCabinetApp
         /// <value>
         /// </value>
         public char Letter { get; private set; }
-
-        /// <summary>
-        /// Checks the fields of record.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">Throw when first name or last name is null.</exception>
-        /// <exception cref="ArgumentException">
-        /// Throw when first name or last name length is less than 2 or more than 60,
-        /// date of birth is less than 01-Jan-1950 or more than now, weight is less than 1 or more than 500, account less than 0 and letter is not a letter.
-        /// </exception>
-        public void CheckInput()
-        {
-            if (string.IsNullOrWhiteSpace(this.FirstName))
-            {
-                throw new ArgumentNullException(nameof(this.FirstName));
-            }
-
-            if (this.FirstName.Length < 2 || this.FirstName.Length > 60)
-            {
-                throw new ArgumentException("firstName length is less than 2 or more than 60.");
-            }
-
-            if (string.IsNullOrWhiteSpace(this.LastName))
-            {
-                throw new ArgumentNullException(nameof(this.LastName));
-            }
-
-            if (this.LastName.Length < 2 || this.LastName.Length > 60)
-            {
-                throw new ArgumentException("lastName length is less than 2 or more than 60.");
-            }
-
-            if (this.DateOfBirth < new DateTime(1950, 1, 1) || this.DateOfBirth > DateTime.Now)
-            {
-                throw new ArgumentException("dateOfBirth is less than 01-Jan-1950 or more than now.");
-            }
-
-            if (this.Weight < 1 || this.Weight > 500)
-            {
-                throw new ArgumentException("weight is less than 1 or more than 500.");
-            }
-
-            if (this.Account < 0)
-            {
-                throw new ArgumentException("account is less than zero.");
-            }
-
-            if (!char.IsLetter(this.Letter))
-            {
-                throw new ArgumentException("letter is not a letter.");
-            }
-        }
     }
 }

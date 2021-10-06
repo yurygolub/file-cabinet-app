@@ -6,7 +6,7 @@ namespace FileCabinetApp
     /// <summary>
     /// Provides methods for working with file cabinet.
     /// </summary>
-    public class FileCabinetService
+    public abstract class FileCabinetService
     {
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
 
@@ -15,6 +15,12 @@ namespace FileCabinetApp
         private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
 
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
+
+        /// <summary>
+        /// Checks the validity of the entered data.
+        /// </summary>
+        /// <param name="record">Record.</param>
+        public abstract void ValidateParameters(Record record);
 
         /// <summary>
         /// Сreates a record with the specified parameters.
