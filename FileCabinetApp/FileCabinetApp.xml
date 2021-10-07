@@ -31,22 +31,20 @@
             Provides methods for working with custom file cabinet.
             </summary>
         </member>
-        <member name="M:FileCabinetApp.FileCabinetCustomService.CreateValidator">
+        <member name="M:FileCabinetApp.FileCabinetCustomService.#ctor">
             <summary>
-            Creates a custom record validator object.
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetCustomService"/> class.
             </summary>
-            <returns>Custom record validator object.</returns>
         </member>
         <member name="T:FileCabinetApp.FileCabinetDefaultService">
             <summary>
             Provides methods for working with default file cabinet.
             </summary>
         </member>
-        <member name="M:FileCabinetApp.FileCabinetDefaultService.CreateValidator">
+        <member name="M:FileCabinetApp.FileCabinetDefaultService.#ctor">
             <summary>
-            Creates a default record validator object.
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetDefaultService"/> class.
             </summary>
-            <returns>Default record validator object.</returns>
         </member>
         <member name="T:FileCabinetApp.FileCabinetRecord">
             <summary>
@@ -107,11 +105,18 @@
             Provides methods for working with file cabinet.
             </summary>
         </member>
-        <member name="M:FileCabinetApp.FileCabinetService.CreateValidator">
+        <member name="M:FileCabinetApp.FileCabinetService.#ctor(FileCabinetApp.IRecordValidator)">
             <summary>
-            Creates a record validator object.
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetService"/> class.
             </summary>
-            <returns>Record validator object.</returns>
+            <param name="validator">Validator.</param>
+        </member>
+        <member name="P:FileCabinetApp.FileCabinetService.Validator">
+            <summary>
+            Gets the validator object.
+            </summary>
+            <value>
+            </value>
         </member>
         <member name="M:FileCabinetApp.FileCabinetService.CreateRecord(FileCabinetApp.Record)">
             <summary>

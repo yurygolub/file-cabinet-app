@@ -249,7 +249,7 @@ namespace FileCabinetApp
 
                 try
                 {
-                    fileCabinetService.CreateValidator().ValidateParameters(record);
+                    fileCabinetService.RecordValidator.ValidateParameters(record);
                     break;
                 }
                 catch (ArgumentNullException ex)

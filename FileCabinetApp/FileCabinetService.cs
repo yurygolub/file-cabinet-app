@@ -6,7 +6,7 @@ namespace FileCabinetApp
     /// <summary>
     /// Provides methods for working with file cabinet.
     /// </summary>
-    public abstract class FileCabinetService
+    public class FileCabinetService
     {
         private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
 
@@ -17,10 +17,20 @@ namespace FileCabinetApp
         private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
 
         /// <summary>
-        /// Creates a record validator object.
+        /// Initializes a new instance of the <see cref="FileCabinetService"/> class.
         /// </summary>
-        /// <returns>Record validator object.</returns>
-        public abstract IRecordValidator CreateValidator();
+        /// <param name="recordValidator">Record validator.</param>
+        public FileCabinetService(IRecordValidator recordValidator)
+        {
+            this.RecordValidator = recordValidator;
+        }
+
+        /// <summary>
+        /// Gets the record validator object.
+        /// </summary>
+        /// <value>
+        /// </value>
+        public IRecordValidator RecordValidator { get; private set; }
 
         /// <summary>
         /// Сreates a record with the specified parameters.
@@ -34,7 +44,7 @@ namespace FileCabinetApp
                 throw new ArgumentNullException(nameof(record));
             }
 
-            this.CreateValidator().ValidateParameters(record);
+            this.RecordValidator.ValidateParameters(record);
 
             FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
             {
