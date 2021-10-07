@@ -69,7 +69,7 @@ namespace FileCabinetApp
         /// Returns the array of records.
         /// </summary>
         /// <returns>The array of records.</returns>
-        public FileCabinetRecord[] GetRecords()
+        public IReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
             return this.list.ToArray();
         }
@@ -127,7 +127,7 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="firstName">First name.</param>
         /// <returns>Returns the array of found records.</returns>
-        public FileCabinetRecord[] FindByFirstName(string firstName)
+        public IReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
             if (!this.firstNameDictionary.ContainsKey(firstName))
             {
@@ -142,7 +142,7 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="lastName">Last name.</param>
         /// <returns>Returns the array of found records.</returns>
-        public FileCabinetRecord[] FindByLastName(string lastName)
+        public IReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
             if (!this.lastNameDictionary.ContainsKey(lastName))
             {
@@ -157,7 +157,7 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="dateOfBirth">Date of birth.</param>
         /// <returns>Returns the array of found records.</returns>
-        public FileCabinetRecord[] FindByDateOfBirth(DateTime dateOfBirth)
+        public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
         {
             if (!this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
             {
