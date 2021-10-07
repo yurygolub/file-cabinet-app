@@ -14,7 +14,7 @@ namespace FileCabinetApp
         private const int ExplanationHelpIndex = 2;
 
         private static bool isRunning = true;
-        private static FileCabinetService fileCabinetService = new FileCabinetDefaultService();
+        private static FileCabinetService fileCabinetService = new FileCabinetService(new DefaultValidator());
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
         {
@@ -100,14 +100,14 @@ namespace FileCabinetApp
             {
                 if (string.Equals("default", commands[IndexOfValidationRules], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    fileCabinetService = new FileCabinetDefaultService();
+                    fileCabinetService = new FileCabinetService(new DefaultValidator());
                     Console.WriteLine("Using default validation rules.");
                     return;
                 }
 
                 if (string.Equals("custom", commands[IndexOfValidationRules], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    fileCabinetService = new FileCabinetCustomService();
+                    fileCabinetService = new FileCabinetService(new CustomValidator());
                     Console.WriteLine("Using custom validation rules.");
                     return;
                 }
