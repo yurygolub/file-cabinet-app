@@ -15,6 +15,7 @@ namespace FileCabinetApp
 
         private static bool isRunning = true;
         private static IFileCabinetService fileCabinetService = new FileCabinetService(new DefaultValidator());
+        private static IValidator validator = new DefValidator();
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
         {
@@ -108,6 +109,7 @@ namespace FileCabinetApp
                 if (string.Equals("custom", commands[IndexOfValidationRules], StringComparison.InvariantCultureIgnoreCase))
                 {
                     fileCabinetService = new FileCabinetService(new CustomValidator());
+                    validator = new CusValidator();
                     Console.WriteLine("Using custom validation rules.");
                     return;
                 }
@@ -209,58 +211,56 @@ namespace FileCabinetApp
 
         private static void InputRecord(out Record record)
         {
-            while (true)
+            IConverter converter = new Converter();
+
+            Console.Write("First name: ");
+            string firstName = ReadInput(converter.StringConvert, validator.FirstNameValidate);
+
+            Console.Write("Last name: ");
+            string lastName = ReadInput(converter.StringConvert, validator.LastNameValidate);
+
+            Console.Write("Date of birth: ");
+            DateTime dateOfBirth = ReadInput(converter.DateConvert, validator.DateOfBirtheValidate);
+
+            Console.Write("Weight: ");
+            short weight = ReadInput(converter.ShortConvert, validator.WeightValidate);
+
+            Console.Write("Account: ");
+            decimal account = ReadInput(converter.DecimalConvert, validator.AccountValidate);
+
+            Console.Write("Letter: ");
+            char letter = ReadInput(converter.CharConvert, validator.LetterValidate);
+
+            record = new Record(firstName, lastName, dateOfBirth, weight, account, letter);
+        }
+
+        private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
+        {
+            do
             {
-                Console.Write("First name: ");
-                string firstName = Console.ReadLine();
+                T value;
 
-                Console.Write("Last name: ");
-                string lastName = Console.ReadLine();
+                string input = Console.ReadLine();
+                Tuple<bool, string, T> conversionResult = converter(input);
 
-                Console.Write("Date of birth: ");
-                if (!DateTime.TryParse(Console.ReadLine(), out DateTime dateOfBirth))
+                if (!conversionResult.Item1)
                 {
-                    Console.WriteLine("Incorrect format.");
+                    Console.WriteLine($"Conversion failed: {conversionResult.Item2}. Please, correct your input.");
                     continue;
                 }
 
-                Console.Write("Weight: ");
-                if (!short.TryParse(Console.ReadLine(), out short weight))
+                value = conversionResult.Item3;
+
+                Tuple<bool, string> validationResult = validator(value);
+                if (!validationResult.Item1)
                 {
-                    Console.WriteLine("Incorrect format.");
+                    Console.WriteLine($"Validation failed: {validationResult.Item2}. Please, correct your input.");
                     continue;
                 }
 
-                Console.Write("Account: ");
-                if (!decimal.TryParse(Console.ReadLine(), out decimal account))
-                {
-                    Console.WriteLine("Incorrect format.");
-                    continue;
-                }
-
-                Console.Write("Letter: ");
-                if (!char.TryParse(Console.ReadLine(), out char letter))
-                {
-                    Console.WriteLine("Incorrect format.");
-                    continue;
-                }
-
-                record = new Record(firstName, lastName, dateOfBirth, weight, account, letter);
-
-                try
-                {
-                    ((FileCabinetService)fileCabinetService).RecordValidator.ValidateParameters(record);
-                    break;
-                }
-                catch (ArgumentNullException ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-                catch (ArgumentException ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+                return value;
             }
+            while (true);
         }
 
         private static void Find(string parameters)
