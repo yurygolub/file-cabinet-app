@@ -214,6 +214,23 @@
             <value>
             </value>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordCsvWriter">
+            <summary>
+            Serializes record in csv format.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvWriter.#ctor(System.IO.TextWriter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordCsvWriter"/> class.
+            </summary>
+            <param name="textWriter">Text writer.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordCsvWriter.Write(FileCabinetApp.FileCabinetRecord)">
+            <summary>
+            Writes fileCabinetRecord in csv format file.
+            </summary>
+            <param name="fileCabinetRecord">File cabinet record.</param>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetService">
             <summary>
             Provides methods for working with file cabinet.
@@ -285,6 +302,29 @@
             </summary>
             <param name="dateOfBirth">Date of birth.</param>
             <returns>Returns the array of found records.</returns>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetService.MakeSnapshot">
+            <summary>
+            Creates FileCabinetServiceSnapshot object.
+            </summary>
+            <returns>Returns new FileCabinetServiceSnapshot object.</returns>
+        </member>
+        <member name="T:FileCabinetApp.FileCabinetServiceSnapshot">
+            <summary>
+            Memento class.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.#ctor(FileCabinetApp.FileCabinetRecord[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetServiceSnapshot"/> class.
+            </summary>
+            <param name="records">Records.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToCsv(System.IO.StreamWriter)">
+            <summary>
+            Saves records to csv.
+            </summary>
+            <param name="streamWriter">Stream writer.</param>
         </member>
         <member name="T:FileCabinetApp.IConverter">
             <summary>
@@ -383,6 +423,12 @@
             </summary>
             <param name="dateOfBirth">Date of birth.</param>
             <returns>Returns the array of found records.</returns>
+        </member>
+        <member name="M:FileCabinetApp.IFileCabinetService.MakeSnapshot">
+            <summary>
+            Creates FileCabinetServiceSnapshot object.
+            </summary>
+            <returns>Returns new FileCabinetServiceSnapshot object.</returns>
         </member>
         <member name="T:FileCabinetApp.IRecordValidator">
             <summary>
