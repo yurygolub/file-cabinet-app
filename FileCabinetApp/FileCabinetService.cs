@@ -167,6 +167,15 @@ namespace FileCabinetApp
             return this.dateOfBirthDictionary[dateOfBirth].ToArray();
         }
 
+        /// <summary>
+        /// Creates FileCabinetServiceSnapshot object.
+        /// </summary>
+        /// <returns>Returns new FileCabinetServiceSnapshot object.</returns>
+        public FileCabinetServiceSnapshot MakeSnapshot()
+        {
+            return new FileCabinetServiceSnapshot(this.list.ToArray());
+        }
+
         private static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
         {
             if (dictionary.ContainsKey(key))

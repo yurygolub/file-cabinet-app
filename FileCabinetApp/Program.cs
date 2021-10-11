@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace FileCabinetApp
 {
@@ -26,6 +27,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("list", List),
             new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("find", Find),
+            new Tuple<string, Action<string>>("export", Export),
         };
 
         private static string[][] helpMessages = new string[][]
@@ -37,6 +39,7 @@ namespace FileCabinetApp
             new string[] { "list", "returns list of records added to service", "The 'list' command returns list of records added to service." },
             new string[] { "edit", "edits a record", "The 'edit' command edits a record." },
             new string[] { "find", "finds a record", "The 'find' command finds a record." },
+            new string[] { "export", "exports service data in specified format", "The 'export' command exports service data in specified format." },
         };
 
         /// <summary>
@@ -307,6 +310,84 @@ namespace FileCabinetApp
             }
 
             PrintRecords(result);
+        }
+
+        private static void Export(string input)
+        {
+            FileCabinetServiceSnapshot fileCabinetServiceSnapshot = fileCabinetService.MakeSnapshot();
+
+            Tuple<string, Action<StreamWriter>>[] fileFormats = new Tuple<string, Action<StreamWriter>>[]
+            {
+                new Tuple<string, Action<StreamWriter>>("csv", fileCabinetServiceSnapshot.SaveToCsv),
+                new Tuple<string, Action<StreamWriter>>("xml", fileCabinetServiceSnapshot.SaveToXml),
+            };
+
+            string[] parameters = input.Split(' ', 2);
+            const int fileFormatIndex = 0;
+            string fileFormat = parameters[fileFormatIndex];
+
+            if (string.IsNullOrEmpty(fileFormat))
+            {
+                Console.WriteLine("You should write the parameters.");
+                return;
+            }
+
+            if (parameters.Length < 2)
+            {
+                Console.WriteLine("You should write the file name.");
+                return;
+            }
+
+            int index = Array.FindIndex(fileFormats, 0, fileFormats.Length, i => i.Item1.Equals(fileFormat, StringComparison.InvariantCultureIgnoreCase));
+            if (index >= 0)
+            {
+                const int fileNameIndex = 1;
+                string fileName = parameters[fileNameIndex];
+                SaveToFile(fileName, fileFormats[index].Item2);
+            }
+            else
+            {
+                Console.WriteLine($"There is no '{fileFormat}' file format.");
+            }
+        }
+
+        private static void SaveToFile(string fileName, Action<StreamWriter> format)
+        {
+            if (File.Exists(fileName))
+            {
+                Console.Write($"File is exist - rewrite {fileName}? [Y/n] ");
+                string input = Console.ReadLine();
+                if (input == "Y")
+                {
+                    Write();
+                }
+                else if (input == "n")
+                {
+                    return;
+                }
+            }
+            else
+            {
+                Write();
+            }
+
+            void Write()
+            {
+                try
+                {
+                    using (StreamWriter streamWriter = new StreamWriter(fileName, false, System.Text.Encoding.Default))
+                    {
+                        format(streamWriter);
+                    }
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return;
+                }
+
+                Console.WriteLine($"All records are exported to file {fileName}.");
+            }
         }
     }
 }
