@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Xml;
 
 namespace FileCabinetApp
 {
@@ -39,6 +40,37 @@ namespace FileCabinetApp
             }
 
             streamWriter.Close();
+        }
+
+        /// <summary>
+        /// Saves records to xml.
+        /// </summary>
+        /// <param name="streamWriter">Stream writer.</param>
+        public void SaveToXml(StreamWriter streamWriter)
+        {
+            if (streamWriter is null)
+            {
+                throw new ArgumentNullException(nameof(streamWriter));
+            }
+
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
+            {
+                Indent = true,
+                IndentChars = "\t",
+            };
+
+            XmlWriter xmlWriter = XmlWriter.Create(streamWriter, xmlWriterSettings);
+            FileCabinetRecordXmlWriter fileCabinetRecordXmlWriter = new FileCabinetRecordXmlWriter(xmlWriter);
+            xmlWriter.WriteStartDocument();
+            xmlWriter.WriteStartElement("records");
+
+            foreach (var record in this.records)
+            {
+                fileCabinetRecordXmlWriter.Write(record);
+            }
+
+            xmlWriter.WriteEndDocument();
+            xmlWriter.Close();
         }
     }
 }

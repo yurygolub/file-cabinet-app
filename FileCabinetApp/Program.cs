@@ -319,6 +319,7 @@ namespace FileCabinetApp
             Tuple<string, Action<StreamWriter>>[] fileFormats = new Tuple<string, Action<StreamWriter>>[]
             {
                 new Tuple<string, Action<StreamWriter>>("csv", fileCabinetServiceSnapshot.SaveToCsv),
+                new Tuple<string, Action<StreamWriter>>("xml", fileCabinetServiceSnapshot.SaveToXml),
             };
 
             string[] parameters = input.Split(' ', 2);

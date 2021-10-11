@@ -231,6 +231,23 @@
             </summary>
             <param name="fileCabinetRecord">File cabinet record.</param>
         </member>
+        <member name="T:FileCabinetApp.FileCabinetRecordXmlWriter">
+            <summary>
+            Serializes record in xml format.
+            </summary>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlWriter.#ctor(System.Xml.XmlWriter)">
+            <summary>
+            Initializes a new instance of the <see cref="T:FileCabinetApp.FileCabinetRecordXmlWriter"/> class.
+            </summary>
+            <param name="xmlWriter">Xml writer.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetRecordXmlWriter.Write(FileCabinetApp.FileCabinetRecord)">
+            <summary>
+            Writes fileCabinetRecord in xml format file.
+            </summary>
+            <param name="fileCabinetRecord">File cabinet record.</param>
+        </member>
         <member name="T:FileCabinetApp.FileCabinetService">
             <summary>
             Provides methods for working with file cabinet.
@@ -323,6 +340,12 @@
         <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToCsv(System.IO.StreamWriter)">
             <summary>
             Saves records to csv.
+            </summary>
+            <param name="streamWriter">Stream writer.</param>
+        </member>
+        <member name="M:FileCabinetApp.FileCabinetServiceSnapshot.SaveToXml(System.IO.StreamWriter)">
+            <summary>
+            Saves records to xml.
             </summary>
             <param name="streamWriter">Stream writer.</param>
         </member>
