@@ -49,7 +49,7 @@ namespace FileCabinetApp
         public static void Main(string[] args)
         {
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
-            SetValidationRule(args);
+            CommandHandler(args);
             Console.WriteLine(Program.HintMessage);
             Console.WriteLine();
 
@@ -81,44 +81,83 @@ namespace FileCabinetApp
             while (isRunning);
         }
 
-        private static void SetValidationRule(string[] args)
+        private static void CommandHandler(string[] args)
         {
+            Tuple<string[], Action<string>>[] commandHandler = new Tuple<string[], Action<string>>[]
+            {
+                new Tuple<string[], Action<string>>(new string[] { "--storage", "-s" }, SetStorage),
+                new Tuple<string[], Action<string>>(new string[] { "--validation-rules", "-v" }, SetValidationRule),
+            };
+
             string temp = string.Join(" ", args);
-            if (string.IsNullOrEmpty(temp))
-            {
-                Console.WriteLine("Using default validation rules.");
-                return;
-            }
-
             string[] commands = temp.Split(new string[] { " ", "=" }, StringSplitOptions.RemoveEmptyEntries);
-            if (commands.Length < 2)
+            (string, string)[] commandsWithArgs = new (string, string)[commandHandler.Length];
+            for (int i = 0, j = 0; i < commands.Length && j < commandsWithArgs.Length; i += 2, j++)
             {
-                Console.WriteLine("Using default validation rules.");
-                return;
+                commandsWithArgs[j].Item1 = commands[i];
+                commandsWithArgs[j].Item2 = i + 1 < commands.Length ? commands[i + 1] : string.Empty;
             }
 
-            const int IndexOfTypeValidationRules = 0;
-            const int IndexOfValidationRules = 1;
-
-            if (string.Equals("--validation-rules", commands[IndexOfTypeValidationRules]) || string.Equals("-v", commands[IndexOfTypeValidationRules]))
+            for (int i = 0; i < commandHandler.Length; i++)
             {
-                if (string.Equals("default", commands[IndexOfValidationRules], StringComparison.InvariantCultureIgnoreCase))
-                {
-                    fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
-                    Console.WriteLine("Using default validation rules.");
-                    return;
-                }
+                int index = Array.FindIndex(commandsWithArgs, tuple => Array.Exists(commandHandler[i].Item1, str => str.Equals(tuple.Item1, StringComparison.InvariantCultureIgnoreCase)));
+                commandHandler[i].Item2(index >= 0 ? commandsWithArgs[index].Item2 : string.Empty);
+            }
+        }
 
-                if (string.Equals("custom", commands[IndexOfValidationRules], StringComparison.InvariantCultureIgnoreCase))
-                {
-                    fileCabinetService = new FileCabinetMemoryService(new CustomValidator());
+        private static void SetValidationRule(string arg)
+        {
+            switch (arg)
+            {
+                case "custom":
+                    SetValRule(new CustomValidator());
                     validator = new CusValidator();
                     Console.WriteLine("Using custom validation rules.");
-                    return;
-                }
+                    break;
+
+                case "default":
+                default:
+                    SetValRule(new DefaultValidator());
+                    validator = new DefValidator();
+                    Console.WriteLine("Using default validation rules.");
+                    break;
             }
 
-            Console.WriteLine("Using default validation rules.");
+            void SetValRule(IRecordValidator recordValidator)
+            {
+                if (fileCabinetService is FileCabinetMemoryService)
+                {
+                    fileCabinetService = new FileCabinetMemoryService(recordValidator);
+                }
+                else if (fileCabinetService is FileCabinetFilesystemService)
+                {
+                    ((FileCabinetFilesystemService)fileCabinetService).CloseFile();
+                    fileCabinetService = new FileCabinetFilesystemService(recordValidator);
+                    ((FileCabinetFilesystemService)fileCabinetService).OpenFile();
+                }
+            }
+        }
+
+        private static void SetStorage(string arg)
+        {
+            switch (arg)
+            {
+                case "file":
+                    fileCabinetService = new FileCabinetFilesystemService(new DefaultValidator());
+                    if (fileCabinetService is FileCabinetFilesystemService)
+                    {
+                        ((FileCabinetFilesystemService)fileCabinetService).OpenFile();
+                    }
+
+                    Console.WriteLine("Using file.");
+                    break;
+
+                case "memory":
+                default:
+                    fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
+                    Console.WriteLine("Using memory.");
+                    break;
+            }
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -158,6 +197,11 @@ namespace FileCabinetApp
         {
             Console.WriteLine("Exiting an application...");
             isRunning = false;
+
+            if (fileCabinetService is FileCabinetFilesystemService)
+            {
+                ((FileCabinetFilesystemService)fileCabinetService).CloseFile();
+            }
         }
 
         private static void Stat(string parameters)

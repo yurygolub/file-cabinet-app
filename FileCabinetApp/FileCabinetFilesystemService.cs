@@ -1,10 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace FileCabinetApp
 {
     public class FileCabinetFilesystemService : IFileCabinetService
     {
+        private FileStream fileStream;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FileCabinetFilesystemService"/> class.
+        /// </summary>
+        /// <param name="recordValidator">Record validator.</param>
+        public FileCabinetFilesystemService(IRecordValidator recordValidator)
+        {
+            this.RecordValidator = recordValidator;
+        }
+
+        /// <summary>
+        /// Gets the record validator object.
+        /// </summary>
+        /// <value>
+        /// </value>
+        public IRecordValidator RecordValidator { get; private set; }
+
         public int CreateRecord(Record record)
         {
             throw new NotImplementedException();
@@ -48,6 +67,16 @@ namespace FileCabinetApp
         public FileCabinetServiceSnapshot MakeSnapshot()
         {
             throw new NotImplementedException();
+        }
+
+        public void OpenFile()
+        {
+            this.fileStream = new FileStream("cabinet-records.db", FileMode.Append);
+        }
+
+        public void CloseFile()
+        {
+            this.fileStream.Close();
         }
     }
 }
