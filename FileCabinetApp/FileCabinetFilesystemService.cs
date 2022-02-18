@@ -116,7 +116,17 @@ namespace FileCabinetApp
 
         public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
         {
-            throw new NotImplementedException();
+            List<FileCabinetRecord> result = new List<FileCabinetRecord>();
+            IReadOnlyCollection<FileCabinetRecord> records = this.GetRecords();
+            foreach (var record in records)
+            {
+                if (record.DateOfBirth == dateOfBirth)
+                {
+                    result.Add(record);
+                }
+            }
+
+            return result.ToArray();
         }
 
         public void IsExist(int id)
