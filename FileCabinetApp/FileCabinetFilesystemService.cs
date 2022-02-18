@@ -101,7 +101,17 @@ namespace FileCabinetApp
 
         public IReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
-            throw new NotImplementedException();
+            List<FileCabinetRecord> result = new List<FileCabinetRecord>();
+            IReadOnlyCollection<FileCabinetRecord> records = this.GetRecords();
+            foreach (var record in records)
+            {
+                if (record.LastName == lastName)
+                {
+                    result.Add(record);
+                }
+            }
+
+            return result.ToArray();
         }
 
         public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
