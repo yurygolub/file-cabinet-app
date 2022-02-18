@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace FileCabinetApp
 {
@@ -50,7 +51,15 @@ namespace FileCabinetApp
 
         public IReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
-            throw new NotImplementedException();
+            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
+            byte[] recordBuffer = new byte[RecordSize];
+            this.fileStream.Position = 0;
+            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
+            {
+                records.Add(BytesToRecord(recordBuffer));
+            }
+
+            return records.ToArray();
         }
 
         public int GetStat()
@@ -119,6 +128,50 @@ namespace FileCabinetApp
                 char[] buffer = new char[MaxSize];
                 line.ToCharArray().CopyTo(buffer, 0);
                 binaryWriter.Write(buffer);
+            }
+        }
+
+        private static FileCabinetRecord BytesToRecord(byte[] bytes)
+        {
+            using MemoryStream memoryStream = new MemoryStream(bytes);
+            using BinaryReader binaryReader = new BinaryReader(memoryStream, Encoding.Unicode);
+            binaryReader.BaseStream.Seek(sizeof(short), SeekOrigin.Current);
+
+            int id = binaryReader.ReadInt32();
+            string firstName = ReadFixedLengthString(binaryReader);
+            string lastName = ReadFixedLengthString(binaryReader);
+            int year = binaryReader.ReadInt32();
+            int month = binaryReader.ReadInt32();
+            int day = binaryReader.ReadInt32();
+            short weight = binaryReader.ReadInt16();
+            decimal account = binaryReader.ReadDecimal();
+            char letter = binaryReader.ReadChar();
+
+            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord()
+            {
+                Id = id,
+                FirstName = firstName,
+                LastName = lastName,
+                DateOfBirth = new DateTime(year, month, day),
+                Weight = weight,
+                Account = account,
+                Letter = letter,
+            };
+
+            return fileCabinetRecord;
+
+            string ReadFixedLengthString(BinaryReader binaryReader)
+            {
+                const int MaxSize = 60;
+                char[] buffer = new char[MaxSize];
+                binaryReader.Read(buffer);
+                int count = 0;
+                while (buffer[count] != 0)
+                {
+                    count++;
+                }
+
+                return new string(buffer[..count]);
             }
         }
     }
