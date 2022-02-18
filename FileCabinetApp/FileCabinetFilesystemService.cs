@@ -64,7 +64,8 @@ namespace FileCabinetApp
 
         public int GetStat()
         {
-            throw new NotImplementedException();
+            int length = (int)this.fileStream.Length;
+            return length / RecordSize;
         }
 
         public IReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
