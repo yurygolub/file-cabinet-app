@@ -8,6 +8,7 @@ namespace FileCabinetApp
     public class FileCabinetFilesystemService : IFileCabinetService
     {
         private const int RecordSize = 278;
+        private const string PathToDB = "cabinet-records.db";
         private FileStream fileStream;
 
         /// <summary>
@@ -17,6 +18,11 @@ namespace FileCabinetApp
         public FileCabinetFilesystemService(IRecordValidator recordValidator)
         {
             this.RecordValidator = recordValidator;
+        }
+
+        public FileCabinetFilesystemService(FileStream fileStream)
+        {
+            this.fileStream = fileStream;
         }
 
         /// <summary>
@@ -110,7 +116,12 @@ namespace FileCabinetApp
 
         public void OpenFile()
         {
-            this.fileStream = new FileStream("cabinet-records.db", FileMode.Open, FileAccess.ReadWrite);
+            if (!File.Exists(PathToDB))
+            {
+                throw new FileNotFoundException($"File '{PathToDB}' not found. Parameter name: {nameof(PathToDB)}.");
+            }
+
+            this.fileStream = new FileStream(PathToDB, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         public void CloseFile()
