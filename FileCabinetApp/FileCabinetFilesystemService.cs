@@ -46,7 +46,17 @@ namespace FileCabinetApp
 
         public void EditRecord(int id, Record record)
         {
-            throw new NotImplementedException();
+            this.IsExist(id);
+
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
+
+            byte[] bytes = RecordToBytes(id, record);
+            this.fileStream.Position = RecordSize * (id - 1);
+            this.fileStream.Write(bytes);
+            this.fileStream.Flush();
         }
 
         public IReadOnlyCollection<FileCabinetRecord> GetRecords()
@@ -85,7 +95,12 @@ namespace FileCabinetApp
 
         public void IsExist(int id)
         {
-            throw new NotImplementedException();
+            int length = (int)this.fileStream.Length;
+            int count = length / RecordSize;
+            if (id < 1 || id > count)
+            {
+                throw new ArgumentException($"#{id} record is not found.");
+            }
         }
 
         public FileCabinetServiceSnapshot MakeSnapshot()
