@@ -31,15 +31,9 @@ namespace FileCabinetApp.FileCabinetService
         /// <summary>
         /// Gets the record validator object.
         /// </summary>
-        /// <value>
-        /// </value>
-        public IRecordValidator RecordValidator { get; private set; }
+        public IRecordValidator RecordValidator { get; }
 
-        /// <summary>
-        /// Сreates a record with the specified parameters.
-        /// </summary>
-        /// <param name="record">Record.</param>
-        /// <returns>Id of the created record.</returns>
+        /// <inheritdoc/>
         public int CreateRecord(RecordParameterObject record)
         {
             if (record is null)
@@ -66,34 +60,40 @@ namespace FileCabinetApp.FileCabinetService
 
             this.list.Add(fileCabinetRecord);
             return fileCabinetRecord.Id;
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    dictionary[key].Add(record);
+                }
+                else
+                {
+                    List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                    {
+                        record,
+                    };
+                    dictionary.Add(key, records);
+                }
+            }
         }
 
-        /// <summary>
-        /// Returns the array of records.
-        /// </summary>
-        /// <returns>The array of records.</returns>
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
             return this.list.ToArray();
         }
 
-        /// <summary>
-        /// Returns the count of records.
-        /// </summary>
-        /// <returns>The count of records.</returns>
+        /// <inheritdoc/>
         public int GetStat()
         {
             return this.list.Count;
         }
 
-        /// <summary>
-        /// Edits a record with the specified parameters.
-        /// </summary>
-        /// <param name="id">Id of editing record.</param>
-        /// <param name="record">Record.</param>
+        /// <inheritdoc/>
         public void EditRecord(int id, RecordParameterObject record)
         {
-            this.IsExist(id);
+            this.IsRecordExist(id);
 
             if (record is null)
             {
@@ -110,14 +110,32 @@ namespace FileCabinetApp.FileCabinetService
             this.list[id - 1].Weight = record.Weight;
             this.list[id - 1].Account = record.Account;
             this.list[id - 1].Letter = record.Letter;
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T oldValue, T newValue)
+                where T : IEquatable<T>
+            {
+                if (!oldValue.Equals(newValue))
+                {
+                    dictionary[oldValue].Remove(record);
+                    if (dictionary.ContainsKey(newValue))
+                    {
+                        dictionary[newValue].Add(record);
+                        dictionary[newValue].Sort((firstValue, secondValue) => firstValue.Id.CompareTo(secondValue.Id));
+                    }
+                    else
+                    {
+                        List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                        {
+                            record,
+                        };
+                        dictionary.Add(newValue, records);
+                    }
+                }
+            }
         }
 
-        /// <summary>
-        /// Checks if there is a record with the specified id.
-        /// </summary>
-        /// <param name="id">Record id.</param>
-        /// <exception cref="ArgumentException">Throw when there is not record with specified id.</exception>
-        public void IsExist(int id)
+        /// <inheritdoc/>
+        public void IsRecordExist(int id)
         {
             if (id < 1 || id > this.list.Count)
             {
@@ -125,11 +143,7 @@ namespace FileCabinetApp.FileCabinetService
             }
         }
 
-        /// <summary>
-        /// Finds all records with specified first name.
-        /// </summary>
-        /// <param name="firstName">First name.</param>
-        /// <returns>Returns the array of found records.</returns>
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
             if (!this.firstNameDictionary.ContainsKey(firstName))
@@ -140,11 +154,7 @@ namespace FileCabinetApp.FileCabinetService
             return this.firstNameDictionary[firstName].ToArray();
         }
 
-        /// <summary>
-        /// Finds all records with specified last name.
-        /// </summary>
-        /// <param name="lastName">Last name.</param>
-        /// <returns>Returns the array of found records.</returns>
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
             if (!this.lastNameDictionary.ContainsKey(lastName))
@@ -155,11 +165,7 @@ namespace FileCabinetApp.FileCabinetService
             return this.lastNameDictionary[lastName].ToArray();
         }
 
-        /// <summary>
-        /// Finds all records with specified date of birth.
-        /// </summary>
-        /// <param name="dateOfBirth">Date of birth.</param>
-        /// <returns>Returns the array of found records.</returns>
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
         {
             if (!this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
@@ -170,47 +176,10 @@ namespace FileCabinetApp.FileCabinetService
             return this.dateOfBirthDictionary[dateOfBirth].ToArray();
         }
 
-        /// <summary>
-        /// Creates FileCabinetServiceSnapshot object.
-        /// </summary>
-        /// <returns>Returns new FileCabinetServiceSnapshot object.</returns>
+        /// <inheritdoc/>
         public FileCabinetServiceSnapshot MakeSnapshot()
         {
-            return new FileCabinetServiceSnapshot(this.list.ToArray());
-        }
-
-        private static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
-        {
-            if (dictionary.ContainsKey(key))
-            {
-                dictionary[key].Add(record);
-            }
-            else
-            {
-                List<FileCabinetRecord> temp = new List<FileCabinetRecord>();
-                temp.Add(record);
-                dictionary.Add(key, temp);
-            }
-        }
-
-        private static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T oldValue, T newValue)
-            where T : IComparable
-        {
-            if (!oldValue.Equals(newValue))
-            {
-                dictionary[oldValue].Remove(record);
-                if (dictionary.ContainsKey(newValue))
-                {
-                    dictionary[newValue].Add(record);
-                    dictionary[newValue].Sort((firstValue, secondValue) => firstValue.Id.CompareTo(secondValue.Id));
-                }
-                else
-                {
-                    List<FileCabinetRecord> temp = new List<FileCabinetRecord>();
-                    temp.Add(record);
-                    dictionary.Add(newValue, temp);
-                }
-            }
+            return new FileCabinetServiceSnapshot(this.list);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace FileCabinetApp.Interfaces
         /// Checks if there is a record with the specified id.
         /// </summary>
         /// <param name="id">Record id.</param>
-        public void IsExist(int id);
+        public void IsRecordExist(int id);
 
         /// <summary>
         /// Finds all records with specified first name.

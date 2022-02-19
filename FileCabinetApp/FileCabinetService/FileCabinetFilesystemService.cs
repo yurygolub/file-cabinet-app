@@ -8,33 +8,72 @@ using FileCabinetApp.Snapshot;
 
 namespace FileCabinetApp.FileCabinetService
 {
-    public class FileCabinetFilesystemService : IFileCabinetService
+    /// <summary>
+    /// Provides methods for working with file cabinet using database file.
+    /// </summary>
+    public class FileCabinetFilesystemService : IFileCabinetService, IDisposable
     {
         private const int RecordSize = 278;
-        private const string PathToDB = "cabinet-records.db";
-        private FileStream fileStream;
+        private readonly FileStream fileStream;
+
+        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary;
+        private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary;
+        private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary;
+
+        private bool disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetFilesystemService"/> class.
         /// </summary>
-        /// <param name="recordValidator">Record validator.</param>
-        public FileCabinetFilesystemService(IRecordValidator recordValidator)
-        {
-            this.RecordValidator = recordValidator;
-        }
-
+        /// <param name="fileStream">FileStream for working with database.</param>
         public FileCabinetFilesystemService(FileStream fileStream)
         {
             this.fileStream = fileStream;
+
+            this.firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
+            this.lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
+            this.dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
+
+            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
+            byte[] recordBuffer = new byte[RecordSize];
+            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
+            {
+                records.Add(BytesToRecord(recordBuffer));
+            }
+
+            LoadDictionary(this.firstNameDictionary, records, (record) => record.FirstName);
+            LoadDictionary(this.lastNameDictionary, records, (record) => record.LastName);
+            LoadDictionary(this.dateOfBirthDictionary, records, (record) => record.DateOfBirth);
+
+            static void LoadDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, IEnumerable<FileCabinetRecord> records, Func<FileCabinetRecord, T> getKey)
+            {
+                foreach (var record in records)
+                {
+                    if (dictionary.ContainsKey(getKey(record)))
+                    {
+                        dictionary[getKey(record)].Add(record);
+                    }
+                    else
+                    {
+                        List<FileCabinetRecord> newList = new List<FileCabinetRecord>
+                        {
+                            record,
+                        };
+                        dictionary.Add(getKey(record), newList);
+                    }
+                }
+            }
         }
 
         /// <summary>
-        /// Gets the record validator object.
+        /// Finalizes an instance of the <see cref="FileCabinetFilesystemService"/> class.
         /// </summary>
-        /// <value>
-        /// </value>
-        public IRecordValidator RecordValidator { get; private set; }
+        ~FileCabinetFilesystemService()
+        {
+            this.Dispose(false);
+        }
 
+        /// <inheritdoc/>
         public int CreateRecord(RecordParameterObject record)
         {
             if (record is null)
@@ -50,24 +89,101 @@ namespace FileCabinetApp.FileCabinetService
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
 
+            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
+            {
+                Id = id,
+                FirstName = record.FirstName,
+                LastName = record.LastName,
+                DateOfBirth = record.DateOfBirth,
+                Weight = record.Weight,
+                Account = record.Account,
+                Letter = record.Letter,
+            };
+
+            UpdateDictionary(this.firstNameDictionary, fileCabinetRecord, fileCabinetRecord.FirstName);
+            UpdateDictionary(this.lastNameDictionary, fileCabinetRecord, fileCabinetRecord.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, fileCabinetRecord, fileCabinetRecord.DateOfBirth);
+
             return id;
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    dictionary[key].Add(record);
+                }
+                else
+                {
+                    List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                    {
+                        record,
+                    };
+                    dictionary.Add(key, records);
+                }
+            }
         }
 
+        /// <inheritdoc/>
         public void EditRecord(int id, RecordParameterObject record)
         {
-            this.IsExist(id);
+            this.IsRecordExist(id);
 
             if (record is null)
             {
                 throw new ArgumentNullException(nameof(record));
             }
 
+            int recordPosition = RecordSize * (id - 1);
+
+            this.fileStream.Position = recordPosition;
+            byte[] recordBuffer = new byte[RecordSize];
+            this.fileStream.Read(recordBuffer, 0, RecordSize);
+            FileCabinetRecord oldRecord = BytesToRecord(recordBuffer);
+
+            this.fileStream.Position = recordPosition;
             byte[] bytes = RecordToBytes(id, record);
-            this.fileStream.Position = RecordSize * (id - 1);
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
+
+            FileCabinetRecord newRecord = new FileCabinetRecord
+            {
+                Id = id,
+                FirstName = record.FirstName,
+                LastName = record.LastName,
+                DateOfBirth = record.DateOfBirth,
+                Weight = record.Weight,
+                Account = record.Account,
+                Letter = record.Letter,
+            };
+
+            UpdateDictionary(this.firstNameDictionary, newRecord, oldRecord.FirstName, newRecord.FirstName);
+            UpdateDictionary(this.firstNameDictionary, newRecord, oldRecord.LastName, newRecord.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, newRecord, oldRecord.DateOfBirth, newRecord.DateOfBirth);
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord newRecord, T oldValue, T newValue)
+                where T : IEquatable<T>
+            {
+                if (!oldValue.Equals(newValue))
+                {
+                    dictionary[oldValue].Remove(newRecord);
+                    if (dictionary.ContainsKey(newValue))
+                    {
+                        dictionary[newValue].Add(newRecord);
+                        dictionary[newValue].Sort((firstValue, secondValue) => firstValue.Id.CompareTo(secondValue.Id));
+                    }
+                    else
+                    {
+                        List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                        {
+                            newRecord,
+                        };
+                        dictionary.Add(newValue, records);
+                    }
+                }
+            }
         }
 
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
             List<FileCabinetRecord> records = new List<FileCabinetRecord>();
@@ -81,58 +197,48 @@ namespace FileCabinetApp.FileCabinetService
             return records.ToArray();
         }
 
+        /// <inheritdoc/>
         public int GetStat()
         {
             int length = (int)this.fileStream.Length;
             return length / RecordSize;
         }
 
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
-            List<FileCabinetRecord> result = new List<FileCabinetRecord>();
-            IReadOnlyCollection<FileCabinetRecord> records = this.GetRecords();
-            foreach (var record in records)
+            if (!this.firstNameDictionary.ContainsKey(firstName))
             {
-                if (record.FirstName == firstName)
-                {
-                    result.Add(record);
-                }
+                return Array.Empty<FileCabinetRecord>();
             }
 
-            return result.ToArray();
+            return this.firstNameDictionary[firstName].ToArray();
         }
 
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
-            List<FileCabinetRecord> result = new List<FileCabinetRecord>();
-            IReadOnlyCollection<FileCabinetRecord> records = this.GetRecords();
-            foreach (var record in records)
+            if (!this.lastNameDictionary.ContainsKey(lastName))
             {
-                if (record.LastName == lastName)
-                {
-                    result.Add(record);
-                }
+                return Array.Empty<FileCabinetRecord>();
             }
 
-            return result.ToArray();
+            return this.lastNameDictionary[lastName].ToArray();
         }
 
+        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
         {
-            List<FileCabinetRecord> result = new List<FileCabinetRecord>();
-            IReadOnlyCollection<FileCabinetRecord> records = this.GetRecords();
-            foreach (var record in records)
+            if (!this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
             {
-                if (record.DateOfBirth == dateOfBirth)
-                {
-                    result.Add(record);
-                }
+                return Array.Empty<FileCabinetRecord>();
             }
 
-            return result.ToArray();
+            return this.dateOfBirthDictionary[dateOfBirth].ToArray();
         }
 
-        public void IsExist(int id)
+        /// <inheritdoc/>
+        public void IsRecordExist(int id)
         {
             int length = (int)this.fileStream.Length;
             int count = length / RecordSize;
@@ -142,24 +248,38 @@ namespace FileCabinetApp.FileCabinetService
             }
         }
 
+        /// <inheritdoc/>
         public FileCabinetServiceSnapshot MakeSnapshot()
         {
-            throw new NotImplementedException();
+            return new FileCabinetServiceSnapshot(this.GetRecords());
         }
 
-        public void OpenFile()
+        /// <summary>
+        /// Releses unmanaged file resources.
+        /// </summary>
+        public void Dispose()
         {
-            if (!File.Exists(PathToDB))
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releses unmanaged file resources.
+        /// </summary>
+        /// <param name="disposing">Indicates whether the method call comes from a Dispose method or from a finalizer.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed)
             {
-                throw new FileNotFoundException($"File '{PathToDB}' not found. Parameter name: {nameof(PathToDB)}.");
+                return;
             }
 
-            this.fileStream = new FileStream(PathToDB, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
-        }
+            if (disposing)
+            {
+                this.fileStream.Dispose();
+            }
 
-        public void CloseFile()
-        {
-            this.fileStream.Close();
+            this.disposed = true;
         }
 
         private static byte[] RecordToBytes(int id, RecordParameterObject record)
@@ -182,7 +302,7 @@ namespace FileCabinetApp.FileCabinetService
 
             return memoryStream.ToArray();
 
-            void WriteFixedLengthString(BinaryWriter binaryWriter, string line)
+            static void WriteFixedLengthString(BinaryWriter binaryWriter, string line)
             {
                 const int MaxSize = 60;
                 char[] buffer = new char[MaxSize];
@@ -220,7 +340,7 @@ namespace FileCabinetApp.FileCabinetService
 
             return fileCabinetRecord;
 
-            string ReadFixedLengthString(BinaryReader binaryReader)
+            static string ReadFixedLengthString(BinaryReader binaryReader)
             {
                 const int MaxSize = 60;
                 char[] buffer = new char[MaxSize];

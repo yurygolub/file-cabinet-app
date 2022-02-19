@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using FileCabinetApp.Converters;
 using FileCabinetApp.FileCabinetService;
@@ -16,15 +17,12 @@ namespace FileCabinetApp
     {
         private const string DeveloperName = "Yury Golub";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
+        private const string PathToDB = "cabinet-records.db";
         private const int CommandHelpIndex = 0;
         private const int DescriptionHelpIndex = 1;
         private const int ExplanationHelpIndex = 2;
 
-        private static bool isRunning = true;
-        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
-        private static IValidator validator = new DefaultInputValidator();
-
-        private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
+        private static readonly Tuple<string, Action<string>>[] Commands = new Tuple<string, Action<string>>[]
         {
             new Tuple<string, Action<string>>("help", PrintHelp),
             new Tuple<string, Action<string>>("exit", Exit),
@@ -36,7 +34,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("export", Export),
         };
 
-        private static string[][] helpMessages = new string[][]
+        private static readonly string[][] HelpMessages = new string[][]
         {
             new string[] { "help", "prints the help screen", "The 'help' command prints the help screen." },
             new string[] { "exit", "exits the application", "The 'exit' command exits the application." },
@@ -47,6 +45,16 @@ namespace FileCabinetApp
             new string[] { "find", "finds a record", "The 'find' command finds a record." },
             new string[] { "export", "exports service data in specified format", "The 'export' command exports service data in specified format." },
         };
+
+        private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
+        {
+            new Tuple<string, string, string[], Action<string>>("--storage", "-s", new string[] { "memory", "file" }, SetStorage),
+            new Tuple<string, string, string[], Action<string>>("--validation-rules", "-v", new string[] { "default", "custom" }, SetValidationRule),
+        };
+
+        private static bool isRunning = true;
+        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
+        private static IValidator inputValidator = new DefaultInputValidator();
 
         /// <summary>
         /// The entry point of application.
@@ -72,12 +80,12 @@ namespace FileCabinetApp
                     continue;
                 }
 
-                var index = Array.FindIndex(commands, 0, commands.Length, i => i.Item1.Equals(command, StringComparison.InvariantCultureIgnoreCase));
+                var index = Array.FindIndex(Commands, 0, Commands.Length, i => i.Item1.Equals(command, StringComparison.InvariantCultureIgnoreCase));
                 if (index >= 0)
                 {
                     const int parametersIndex = 1;
                     var parameters = inputs.Length > 1 ? inputs[parametersIndex] : string.Empty;
-                    commands[index].Item2(parameters);
+                    Commands[index].Item2(parameters);
                 }
                 else
                 {
@@ -89,58 +97,69 @@ namespace FileCabinetApp
 
         private static void CommandHandler(string[] args)
         {
-            Tuple<string[], Action<string>>[] commandHandler = new Tuple<string[], Action<string>>[]
+            Dictionary<string, string> commands = new Dictionary<string, string>();
+            for (int i = 0; i < args.Length; i++)
             {
-                new Tuple<string[], Action<string>>(new string[] { "--storage", "-s" }, SetStorage),
-                new Tuple<string[], Action<string>>(new string[] { "--validation-rules", "-v" }, SetValidationRule),
-            };
-
-            string temp = string.Join(" ", args);
-            string[] commands = temp.Split(new string[] { " ", "=" }, StringSplitOptions.RemoveEmptyEntries);
-            (string, string)[] commandsWithArgs = new (string, string)[commandHandler.Length];
-            for (int i = 0, j = 0; i < commands.Length && j < commandsWithArgs.Length; i += 2, j++)
-            {
-                commandsWithArgs[j].Item1 = commands[i];
-                commandsWithArgs[j].Item2 = i + 1 < commands.Length ? commands[i + 1] : string.Empty;
-            }
-
-            for (int i = 0; i < commandHandler.Length; i++)
-            {
-                int index = Array.FindIndex(commandsWithArgs, tuple => Array.Exists(commandHandler[i].Item1, str => str.Equals(tuple.Item1, StringComparison.InvariantCultureIgnoreCase)));
-                commandHandler[i].Item2(index >= 0 ? commandsWithArgs[index].Item2 : string.Empty);
-            }
-        }
-
-        private static void SetValidationRule(string arg)
-        {
-            switch (arg)
-            {
-                case "custom":
-                    SetValRule(new CustomValidator());
-                    validator = new CustomInputValidator();
-                    Console.WriteLine("Using custom validation rules.");
-                    break;
-
-                case "default":
-                default:
-                    SetValRule(new DefaultValidator());
-                    validator = new DefaultInputValidator();
-                    Console.WriteLine("Using default validation rules.");
-                    break;
-            }
-
-            void SetValRule(IRecordValidator recordValidator)
-            {
-                if (fileCabinetService is FileCabinetMemoryService)
+                if (args[i].StartsWith("--"))
                 {
-                    fileCabinetService = new FileCabinetMemoryService(recordValidator);
+                    string[] splitted = args[i].Split("=", 2);
+                    if (splitted.Length == 2)
+                    {
+                        HandleArgs(commands, splitted[0], splitted[1]);
+                    }
                 }
-                else if (fileCabinetService is FileCabinetFilesystemService)
+                else if (args[i].StartsWith("-"))
                 {
-                    ((FileCabinetFilesystemService)fileCabinetService).CloseFile();
-                    fileCabinetService = new FileCabinetFilesystemService(recordValidator);
-                    ((FileCabinetFilesystemService)fileCabinetService).OpenFile();
+                    string value = args.Length > i + 1 ? args[i + 1] : string.Empty;
+                    HandleArgs(commands, args[i], value);
                 }
+            }
+
+            for (int i = 0; i < CommandLineParameters.Length; i++)
+            {
+                string key1 = CommandLineParameters[i].Item1, key2 = CommandLineParameters[i].Item2;
+                if (commands.ContainsKey(key1))
+                {
+                    CommandLineParameters[i].Item4(commands[key1]);
+                }
+                else if (commands.ContainsKey(key2))
+                {
+                    CommandLineParameters[i].Item4(commands[key2]);
+                }
+                else
+                {
+                    CommandLineParameters[i].Item4(string.Empty);
+                }
+            }
+
+            static void HandleArgs(Dictionary<string, string> commands, string key, string value)
+            {
+                string lowerKey = key.ToLower(), lowerValue = value.ToLower();
+                if (ValidateArgs(lowerKey, lowerValue))
+                {
+                    if (commands.ContainsKey(lowerKey))
+                    {
+                        commands[lowerKey] = lowerValue;
+                    }
+                    else
+                    {
+                        commands.Add(lowerKey, lowerValue);
+                    }
+                }
+            }
+
+            static bool ValidateArgs(string key, string value)
+            {
+                for (int i = 0; i < CommandLineParameters.Length; i++)
+                {
+                    if (CommandLineParameters[i].Item1 == key || CommandLineParameters[i].Item2 == key)
+                    {
+                        int index = Array.FindIndex(CommandLineParameters[i].Item3, (str) => str == value);
+                        return index != -1;
+                    }
+                }
+
+                return false;
             }
         }
 
@@ -149,12 +168,7 @@ namespace FileCabinetApp
             switch (arg)
             {
                 case "file":
-                    fileCabinetService = new FileCabinetFilesystemService(new DefaultValidator());
-                    if (fileCabinetService is FileCabinetFilesystemService)
-                    {
-                        ((FileCabinetFilesystemService)fileCabinetService).OpenFile();
-                    }
-
+                    fileCabinetService = new FileCabinetFilesystemService(OpenFile());
                     Console.WriteLine("Using file.");
                     break;
 
@@ -164,6 +178,43 @@ namespace FileCabinetApp
                     Console.WriteLine("Using memory.");
                     break;
             }
+        }
+
+        private static void SetValidationRule(string arg)
+        {
+            switch (arg)
+            {
+                case "custom":
+                    SetValidationRule(new CustomValidator());
+                    inputValidator = new CustomInputValidator();
+                    Console.WriteLine("Using custom validation rules.");
+                    break;
+
+                case "default":
+                default:
+                    SetValidationRule(new DefaultValidator());
+                    inputValidator = new DefaultInputValidator();
+                    Console.WriteLine("Using default validation rules.");
+                    break;
+            }
+
+            static void SetValidationRule(IRecordValidator recordValidator)
+            {
+                if (fileCabinetService is FileCabinetMemoryService)
+                {
+                    fileCabinetService = new FileCabinetMemoryService(recordValidator);
+                }
+            }
+        }
+
+        private static FileStream OpenFile()
+        {
+            if (!File.Exists(PathToDB))
+            {
+                throw new FileNotFoundException($"File '{PathToDB}' not found.");
+            }
+
+            return new FileStream(PathToDB, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         private static void PrintMissedCommandInfo(string command)
@@ -176,10 +227,10 @@ namespace FileCabinetApp
         {
             if (!string.IsNullOrEmpty(parameters))
             {
-                var index = Array.FindIndex(helpMessages, 0, helpMessages.Length, i => string.Equals(i[Program.CommandHelpIndex], parameters, StringComparison.InvariantCultureIgnoreCase));
+                var index = Array.FindIndex(HelpMessages, 0, HelpMessages.Length, i => string.Equals(i[Program.CommandHelpIndex], parameters, StringComparison.InvariantCultureIgnoreCase));
                 if (index >= 0)
                 {
-                    Console.WriteLine(helpMessages[index][Program.ExplanationHelpIndex]);
+                    Console.WriteLine(HelpMessages[index][Program.ExplanationHelpIndex]);
                 }
                 else
                 {
@@ -190,7 +241,7 @@ namespace FileCabinetApp
             {
                 Console.WriteLine("Available commands:");
 
-                foreach (var helpMessage in helpMessages)
+                foreach (var helpMessage in HelpMessages)
                 {
                     Console.WriteLine("\t{0}\t- {1}", helpMessage[Program.CommandHelpIndex], helpMessage[Program.DescriptionHelpIndex]);
                 }
@@ -204,9 +255,9 @@ namespace FileCabinetApp
             Console.WriteLine("Exiting an application...");
             isRunning = false;
 
-            if (fileCabinetService is FileCabinetFilesystemService)
+            if (fileCabinetService is FileCabinetFilesystemService filesystemService)
             {
-                ((FileCabinetFilesystemService)fileCabinetService).CloseFile();
+                filesystemService.Dispose();
             }
         }
 
@@ -249,7 +300,7 @@ namespace FileCabinetApp
 
             try
             {
-                fileCabinetService.IsExist(id);
+                fileCabinetService.IsRecordExist(id);
             }
             catch (ArgumentException ex)
             {
@@ -267,22 +318,22 @@ namespace FileCabinetApp
             IConverter converter = new Converter();
 
             Console.Write("First name: ");
-            string firstName = ReadInput(converter.StringConvert, validator.FirstNameValidate);
+            string firstName = ReadInput(converter.StringConvert, inputValidator.FirstNameValidate);
 
             Console.Write("Last name: ");
-            string lastName = ReadInput(converter.StringConvert, validator.LastNameValidate);
+            string lastName = ReadInput(converter.StringConvert, inputValidator.LastNameValidate);
 
             Console.Write("Date of birth: ");
-            DateTime dateOfBirth = ReadInput(converter.DateConvert, validator.DateOfBirtheValidate);
+            DateTime dateOfBirth = ReadInput(converter.DateConvert, inputValidator.DateOfBirtheValidate);
 
             Console.Write("Weight: ");
-            short weight = ReadInput(converter.ShortConvert, validator.WeightValidate);
+            short weight = ReadInput(converter.ShortConvert, inputValidator.WeightValidate);
 
             Console.Write("Account: ");
-            decimal account = ReadInput(converter.DecimalConvert, validator.AccountValidate);
+            decimal account = ReadInput(converter.DecimalConvert, inputValidator.AccountValidate);
 
             Console.Write("Letter: ");
-            char letter = ReadInput(converter.CharConvert, validator.LetterValidate);
+            char letter = ReadInput(converter.CharConvert, inputValidator.LetterValidate);
 
             record = new RecordParameterObject(firstName, lastName, dateOfBirth, weight, account, letter);
         }
@@ -409,7 +460,7 @@ namespace FileCabinetApp
                 string input = Console.ReadLine();
                 if (input == "Y")
                 {
-                    Write();
+                    Write(fileName, format);
                 }
                 else if (input == "n")
                 {
@@ -418,17 +469,15 @@ namespace FileCabinetApp
             }
             else
             {
-                Write();
+                Write(fileName, format);
             }
 
-            void Write()
+            static void Write(string fileName, Action<StreamWriter> format)
             {
                 try
                 {
-                    using (StreamWriter streamWriter = new StreamWriter(fileName, false, System.Text.Encoding.Default))
-                    {
-                        format(streamWriter);
-                    }
+                    using StreamWriter streamWriter = new StreamWriter(fileName, false, System.Text.Encoding.Default);
+                    format(streamWriter);
                 }
                 catch (IOException ex)
                 {
