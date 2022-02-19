@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Interfaces
 {
     /// <summary>
     /// Provides methods for conversions.

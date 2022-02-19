@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Globalization;
+using FileCabinetApp.Interfaces;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Validators
 {
     /// <summary>
-    /// Custom validator class.
+    /// Default validator class.
     /// </summary>
-    public class CusValidator : IValidator
+    public class DefaultInputValidator : IValidator
     {
         /// <summary>
-        /// Validates the first name using custom validation rules.
+        /// Validates the first name using default validation rules.
         /// </summary>
         /// <param name="firstName">First name.</param>
         /// <returns>Result of first name validation.</returns>
         public Tuple<bool, string> FirstNameValidate(string firstName)
         {
-            if (string.IsNullOrWhiteSpace(firstName) || firstName.Length < 2 || firstName.Length > 30)
+            if (string.IsNullOrWhiteSpace(firstName) || firstName.Length < 2 || firstName.Length > 60)
             {
                 return new Tuple<bool, string>(false, firstName);
             }
@@ -24,13 +25,13 @@ namespace FileCabinetApp
         }
 
         /// <summary>
-        /// Validates the last name using custom validation rules.
+        /// Validates the last name using default validation rules.
         /// </summary>
         /// <param name="lastName">Last name.</param>
         /// <returns>Result of last name validation.</returns>
         public Tuple<bool, string> LastNameValidate(string lastName)
         {
-            if (string.IsNullOrWhiteSpace(lastName) || lastName.Length < 2 || lastName.Length > 30)
+            if (string.IsNullOrWhiteSpace(lastName) || lastName.Length < 2 || lastName.Length > 60)
             {
                 return new Tuple<bool, string>(false, lastName);
             }
@@ -39,13 +40,13 @@ namespace FileCabinetApp
         }
 
         /// <summary>
-        /// Validates the date of birth using custom validation rules.
+        /// Validates the date of birth using default validation rules.
         /// </summary>
         /// <param name="dateOfBirth">Date of birth.</param>
         /// <returns>Result of date of birth validation.</returns>
         public Tuple<bool, string> DateOfBirtheValidate(DateTime dateOfBirth)
         {
-            if (dateOfBirth < new DateTime(1930, 1, 1) || dateOfBirth > DateTime.Now)
+            if (dateOfBirth < new DateTime(1950, 1, 1) || dateOfBirth > DateTime.Now)
             {
                 return new Tuple<bool, string>(false, dateOfBirth.ToString(CultureInfo.InvariantCulture));
             }
@@ -54,13 +55,13 @@ namespace FileCabinetApp
         }
 
         /// <summary>
-        /// Validates the weight using custom validation rules.
+        /// Validates the weight using default validation rules.
         /// </summary>
         /// <param name="weight">Weight.</param>
         /// <returns>Result of weight validation.</returns>
         public Tuple<bool, string> WeightValidate(short weight)
         {
-            if (weight < 1 || weight > 400)
+            if (weight < 1 || weight > 500)
             {
                 return new Tuple<bool, string>(false, weight.ToString(CultureInfo.InvariantCulture));
             }
@@ -69,7 +70,7 @@ namespace FileCabinetApp
         }
 
         /// <summary>
-        /// Validates the account using custom validation rules.
+        /// Validates the account using default validation rules.
         /// </summary>
         /// <param name="account">Account.</param>
         /// <returns>Result of account validation.</returns>
@@ -84,7 +85,7 @@ namespace FileCabinetApp
         }
 
         /// <summary>
-        /// Validates the letter using custom validation rules.
+        /// Validates the letter using default validation rules.
         /// </summary>
         /// <param name="letter">Letter.</param>
         /// <returns>Result of letter validation.</returns>

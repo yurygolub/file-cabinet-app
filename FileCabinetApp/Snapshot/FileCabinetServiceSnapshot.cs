@@ -1,23 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
+using FileCabinetApp.Record;
+using FileCabinetApp.Snapshot.Export;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Snapshot
 {
     /// <summary>
     /// Memento class.
     /// </summary>
     public class FileCabinetServiceSnapshot
     {
-        private FileCabinetRecord[] records;
+        private readonly List<FileCabinetRecord> records;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetServiceSnapshot"/> class.
         /// </summary>
         /// <param name="records">Records.</param>
-        public FileCabinetServiceSnapshot(FileCabinetRecord[] records)
+        public FileCabinetServiceSnapshot(IEnumerable<FileCabinetRecord> records)
         {
-            this.records = records;
+            this.records = new List<FileCabinetRecord>(records);
         }
 
         /// <summary>

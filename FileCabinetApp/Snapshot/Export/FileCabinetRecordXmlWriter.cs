@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Xml;
+using FileCabinetApp.Record;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Snapshot.Export
 {
     /// <summary>
     /// Serializes record in xml format.
