@@ -22,7 +22,7 @@ namespace FileCabinetApp
 
         private static bool isRunning = true;
         private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
-        private static IValidator validator = new DefValidator();
+        private static IValidator validator = new DefaultInputValidator();
 
         private static Tuple<string, Action<string>>[] commands = new Tuple<string, Action<string>>[]
         {
@@ -117,14 +117,14 @@ namespace FileCabinetApp
             {
                 case "custom":
                     SetValRule(new CustomValidator());
-                    validator = new CusValidator();
+                    validator = new CustomInputValidator();
                     Console.WriteLine("Using custom validation rules.");
                     break;
 
                 case "default":
                 default:
                     SetValRule(new DefaultValidator());
-                    validator = new DefValidator();
+                    validator = new DefaultInputValidator();
                     Console.WriteLine("Using default validation rules.");
                     break;
             }
