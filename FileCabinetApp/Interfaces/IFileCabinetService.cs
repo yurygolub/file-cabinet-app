@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using FileCabinetApp.Record;
+using FileCabinetApp.Snapshot;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Interfaces
 {
     /// <summary>
     /// Interface for working with file cabinet.
@@ -13,7 +15,7 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="record">Record.</param>
         /// <returns>Id of the created record.</returns>
-        public int CreateRecord(Record record);
+        public int CreateRecord(RecordParameterObject record);
 
         /// <summary>
         /// Returns the array of records.
@@ -32,7 +34,7 @@ namespace FileCabinetApp
         /// </summary>
         /// <param name="id">Id of editing record.</param>
         /// <param name="record">Record.</param>
-        public void EditRecord(int id, Record record);
+        public void EditRecord(int id, RecordParameterObject record);
 
         /// <summary>
         /// Checks if there is a record with the specified id.

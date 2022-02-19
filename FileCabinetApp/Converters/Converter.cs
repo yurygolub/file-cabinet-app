@@ -1,6 +1,7 @@
 ﻿using System;
+using FileCabinetApp.Interfaces;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Converters
 {
     /// <summary>
     /// Provides methods for conversions.

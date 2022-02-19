@@ -1,5 +1,11 @@
 ﻿using System;
 using System.IO;
+using FileCabinetApp.Converters;
+using FileCabinetApp.FileCabinetService;
+using FileCabinetApp.Interfaces;
+using FileCabinetApp.Record;
+using FileCabinetApp.Snapshot;
+using FileCabinetApp.Validators;
 
 namespace FileCabinetApp
 {
@@ -212,7 +218,7 @@ namespace FileCabinetApp
 
         private static void Create(string parameters)
         {
-            InputRecord(out Record record);
+            InputRecord(out RecordParameterObject record);
             int id = fileCabinetService.CreateRecord(record);
             Console.WriteLine($"Record #{id} is created.");
         }
@@ -251,12 +257,12 @@ namespace FileCabinetApp
                 return;
             }
 
-            InputRecord(out Record record);
+            InputRecord(out RecordParameterObject record);
             fileCabinetService.EditRecord(id, record);
             Console.WriteLine($"Record #{id} is updated.");
         }
 
-        private static void InputRecord(out Record record)
+        private static void InputRecord(out RecordParameterObject record)
         {
             IConverter converter = new Converter();
 
@@ -278,7 +284,7 @@ namespace FileCabinetApp
             Console.Write("Letter: ");
             char letter = ReadInput(converter.CharConvert, validator.LetterValidate);
 
-            record = new Record(firstName, lastName, dateOfBirth, weight, account, letter);
+            record = new RecordParameterObject(firstName, lastName, dateOfBirth, weight, account, letter);
         }
 
         private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)

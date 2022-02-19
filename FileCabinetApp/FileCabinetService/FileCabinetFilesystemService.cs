@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using FileCabinetApp.Interfaces;
+using FileCabinetApp.Record;
+using FileCabinetApp.Snapshot;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.FileCabinetService
 {
     public class FileCabinetFilesystemService : IFileCabinetService
     {
@@ -32,7 +35,7 @@ namespace FileCabinetApp
         /// </value>
         public IRecordValidator RecordValidator { get; private set; }
 
-        public int CreateRecord(Record record)
+        public int CreateRecord(RecordParameterObject record)
         {
             if (record is null)
             {
@@ -50,7 +53,7 @@ namespace FileCabinetApp
             return id;
         }
 
-        public void EditRecord(int id, Record record)
+        public void EditRecord(int id, RecordParameterObject record)
         {
             this.IsExist(id);
 
@@ -159,7 +162,7 @@ namespace FileCabinetApp
             this.fileStream.Close();
         }
 
-        private static byte[] RecordToBytes(int id, Record record)
+        private static byte[] RecordToBytes(int id, RecordParameterObject record)
         {
             using MemoryStream memoryStream = new MemoryStream();
             using BinaryWriter binaryWriter = new BinaryWriter(memoryStream, Encoding.Unicode);

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.IO;
+using FileCabinetApp.Record;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Snapshot.Export
 {
     /// <summary>
     /// Serializes record in csv format.

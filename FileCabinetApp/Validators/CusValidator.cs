@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Globalization;
+using FileCabinetApp.Interfaces;
 
-namespace FileCabinetApp
+namespace FileCabinetApp.Validators
 {
     /// <summary>
     /// Custom validator class.
