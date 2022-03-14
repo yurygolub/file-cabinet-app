@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using FileCabinetGenerator.Configuration;
 using Microsoft.Extensions.Configuration;
 
@@ -25,6 +26,138 @@ namespace FileCabinetGenerator
 
         public static void Main(string[] args)
         {
+            var configurationRoot = new ConfigurationBuilder()
+                .AddCustomCommandLine(args)
+                .Build();
+
+            var parameters = HandleParameters(configurationRoot);
+
+            var records = GenerateRecords(parameters.amount, parameters.startId);
+
+            Export(parameters.fileName, parameters.fileFormat, records);
+        }
+
+        private static void Export(string fileName, string fileFormat, IEnumerable<FileCabinetRecord> records)
+        {
+            if (string.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                SaveToFile($"{fileName}.{fileFormat}", records, SaveToCsv);
+            }
+        }
+
+        private static void SaveToFile(string fileName, IEnumerable<FileCabinetRecord> records, Action<IEnumerable<FileCabinetRecord>, StreamWriter> saveToFile)
+        {
+            if (File.Exists(fileName))
+            {
+                Console.Write($"File is exist - rewrite {fileName}? [Y/n] ");
+                string input = Console.ReadLine();
+                if (input == "Y")
+                {
+                    Save(fileName, records, saveToFile);
+                }
+                else if (input == "n")
+                {
+                    return;
+                }
+            }
+            else
+            {
+                Save(fileName, records, saveToFile);
+            }
+
+            static void Save(string fileName, IEnumerable<FileCabinetRecord> records, Action<IEnumerable<FileCabinetRecord>, StreamWriter> saveToFile)
+            {
+                using FileStream fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write);
+                using StreamWriter streamWriter = new StreamWriter(fileStream);
+                saveToFile(records, streamWriter);
+
+                Console.WriteLine($"All records are exported to file {fileName}.");
+            }
+        }
+
+        private static void SaveToCsv(IEnumerable<FileCabinetRecord> records, StreamWriter streamWriter)
+        {
+            if (records is null)
+            {
+                throw new ArgumentNullException(nameof(records));
+            }
+
+            streamWriter.WriteLine("Id,First Name,Last Name,Date of Birth,Weight,Account,Letter");
+            foreach (var record in records)
+            {
+                WriteRecord(record, streamWriter);
+            }
+
+            static void WriteRecord(FileCabinetRecord fileCabinetRecord, StreamWriter streamWriter)
+            {
+                streamWriter.WriteLine($"{fileCabinetRecord.Id},{fileCabinetRecord.FirstName},{fileCabinetRecord.LastName}," +
+                        $"{fileCabinetRecord.DateOfBirth.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}," +
+                        $"{fileCabinetRecord.Weight},{fileCabinetRecord.Account},{fileCabinetRecord.Letter}");
+            }
+        }
+
+        private static IEnumerable<FileCabinetRecord> GenerateRecords(int amount, int startId)
+        {
+            const string firstNamesPath = "first names.txt";
+            const string lastNamesPath = "last names.txt";
+
+            string[] firstNames = ReadFile(firstNamesPath);
+            string[] lastNames = ReadFile(lastNamesPath);
+
+            return GenerateRecord(amount, startId, firstNames, lastNames);
+
+            static IEnumerable<FileCabinetRecord> GenerateRecord(int amount, int startId,  string[] firstNames, string[] lastNames)
+            {
+                Random random = new Random();
+                for (int currentId = startId; currentId < amount; currentId++)
+                {
+                    yield return new FileCabinetRecord
+                    {
+                        Id = startId,
+                        FirstName = GenerateName(firstNames),
+                        LastName = GenerateName(lastNames),
+                        DateOfBirth = GenerateDate(),
+                        Weight = (short)random.Next(40, 120),
+                        Account = (decimal)Math.Round(random.NextDouble() * random.Next(1_000), 2),
+                        Letter = (char)new Random().Next(97, 123),
+                    };
+                }
+
+                static string GenerateName(string[] names)
+                {
+                    int index = new Random().Next(names.Length);
+                    return names[index];
+                }
+
+                static DateTime GenerateDate()
+                {
+                    Random random = new Random();
+                    int year = random.Next(1950, DateTime.Now.Year);
+                    int month = random.Next(1, 12);
+                    int day = random.Next(1, 29);
+                    return new DateTime(year, month, day);
+                }
+            }
+        }
+
+        private static string[] ReadFile(string path)
+        {
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException($"{nameof(path)} is not found.", nameof(path));
+            }
+
+            using FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            using StreamReader streamReader = new StreamReader(fileStream);
+
+            List<string> data = new List<string>();
+            string line;
+            while ((line = streamReader.ReadLine()) != null)
+            {
+                data.Add(line);
+            }
+
+            return data.ToArray();
         }
 
         private static (string fileFormat, string fileName, int amount, int startId) HandleParameters(IConfigurationRoot configurationRoot)
@@ -60,7 +193,13 @@ namespace FileCabinetGenerator
                             throw new ArgumentException("You must specify amount.");
                         }
 
-                        result.amount = int.Parse(value);
+                        int amount = int.Parse(value);
+                        if (amount < 0)
+                        {
+                            throw new ArgumentException("amount cannot be less than zero.");
+                        }
+
+                        result.amount = amount;
                         break;
 
                     case CommandType.StartId:
@@ -69,7 +208,13 @@ namespace FileCabinetGenerator
                             throw new ArgumentException("You must specify start id.");
                         }
 
-                        result.startId = int.Parse(value);
+                        int startId = int.Parse(value);
+                        if (startId < 1)
+                        {
+                            throw new ArgumentException("startId cannot be less than one.");
+                        }
+
+                        result.startId = startId;
                         break;
                 }
             }
