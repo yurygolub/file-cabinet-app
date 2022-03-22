@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using FileCabinetGenerator.Configuration;
 using Microsoft.Extensions.Configuration;
 
@@ -42,6 +43,10 @@ namespace FileCabinetGenerator
             if (string.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
             {
                 SaveToFile($"{fileName}.{fileFormat}", records, SaveToCsv);
+            }
+            else if (string.Equals(fileFormat, "xml", StringComparison.OrdinalIgnoreCase))
+            {
+                SaveToFile($"{fileName}.{fileFormat}", records, SaveToXml);
             }
         }
 
@@ -96,10 +101,74 @@ namespace FileCabinetGenerator
             }
         }
 
+        private static void SaveToXml(IEnumerable<FileCabinetRecord> records, StreamWriter streamWriter)
+        {
+            if (records is null)
+            {
+                throw new ArgumentNullException(nameof(records));
+            }
+
+            if (streamWriter is null)
+            {
+                throw new ArgumentNullException(nameof(streamWriter));
+            }
+
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
+            {
+                Indent = true,
+                IndentChars = "\t",
+            };
+
+            using XmlWriter xmlWriter = XmlWriter.Create(streamWriter, xmlWriterSettings);
+            xmlWriter.WriteStartDocument();
+            xmlWriter.WriteStartElement("records");
+
+            foreach (var record in records)
+            {
+                Write(xmlWriter, record);
+            }
+
+            xmlWriter.WriteEndDocument();
+
+            static void Write(XmlWriter xmlWriter, FileCabinetRecord fileCabinetRecord)
+            {
+                if (fileCabinetRecord is null)
+                {
+                    throw new ArgumentNullException(nameof(fileCabinetRecord));
+                }
+
+                xmlWriter.WriteStartElement("record");
+                xmlWriter.WriteAttributeString("id", $"{fileCabinetRecord.Id}");
+
+                xmlWriter.WriteStartElement("name");
+                xmlWriter.WriteAttributeString("first", $"{fileCabinetRecord.FirstName}");
+                xmlWriter.WriteAttributeString("last", $"{fileCabinetRecord.LastName}");
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteStartElement("dateOfBirth");
+                xmlWriter.WriteString(fileCabinetRecord.DateOfBirth.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture));
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteStartElement("weight");
+                xmlWriter.WriteString($"{fileCabinetRecord.Weight}");
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteStartElement("account");
+                xmlWriter.WriteString($"{fileCabinetRecord.Account}");
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteStartElement("letter");
+                xmlWriter.WriteString($"{fileCabinetRecord.Letter}");
+                xmlWriter.WriteEndElement();
+
+                xmlWriter.WriteEndElement();
+            }
+        }
+
         private static IEnumerable<FileCabinetRecord> GenerateRecords(int amount, int startId)
         {
-            const string firstNamesPath = "first names.txt";
-            const string lastNamesPath = "last names.txt";
+            const string firstNamesPath = @"..\..\..\Data\first names.txt";
+            const string lastNamesPath = @"..\..\..\Data\last names.txt";
 
             string[] firstNames = ReadFile(firstNamesPath);
             string[] lastNames = ReadFile(lastNamesPath);
