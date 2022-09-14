@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using Bogus;
 using FileCabinetGenerator.Configuration;
 using FileCabinetGenerator.Serialization;
 using Microsoft.Extensions.Configuration;
@@ -148,66 +149,15 @@ namespace FileCabinetGenerator
 
         private static IEnumerable<FileCabinetRecord> GenerateRecords(int amount, int startId)
         {
-            const string firstNamesPath = @"..\..\..\Data\first names.txt";
-            const string lastNamesPath = @"..\..\..\Data\last names.txt";
-
-            string[] firstNames = ReadFile(firstNamesPath);
-            string[] lastNames = ReadFile(lastNamesPath);
-
-            return GenerateRecord(amount, startId, firstNames, lastNames);
-
-            static IEnumerable<FileCabinetRecord> GenerateRecord(int amount, int startId,  string[] firstNames, string[] lastNames)
-            {
-                Random random = new Random();
-                for (int currentId = startId; currentId < amount; currentId++)
-                {
-                    yield return new FileCabinetRecord
-                    {
-                        Id = startId,
-                        FirstName = GenerateName(firstNames),
-                        LastName = GenerateName(lastNames),
-                        DateOfBirth = GenerateDate(),
-                        Weight = (short)random.Next(40, 120),
-                        Account = (decimal)Math.Round(random.NextDouble() * random.Next(1_000), 2),
-                        Letter = (char)new Random().Next(97, 123),
-                    };
-                }
-
-                static string GenerateName(string[] names)
-                {
-                    int index = new Random().Next(names.Length);
-                    return names[index];
-                }
-
-                static DateTime GenerateDate()
-                {
-                    Random random = new Random();
-                    int year = random.Next(1950, DateTime.Now.Year);
-                    int month = random.Next(1, 12);
-                    int day = random.Next(1, 29);
-                    return new DateTime(year, month, day);
-                }
-            }
-        }
-
-        private static string[] ReadFile(string path)
-        {
-            if (!File.Exists(path))
-            {
-                throw new FileNotFoundException($"{nameof(path)} is not found.", nameof(path));
-            }
-
-            using FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            using StreamReader streamReader = new StreamReader(fileStream);
-
-            List<string> data = new List<string>();
-            string line;
-            while ((line = streamReader.ReadLine()) != null)
-            {
-                data.Add(line);
-            }
-
-            return data.ToArray();
+            return new Faker<FileCabinetRecord>("en")
+                .RuleFor(r => r.Id, f => startId++)
+                .RuleFor(r => r.FirstName, f => f.Name.FirstName())
+                .RuleFor(r => r.LastName, f => f.Name.LastName())
+                .RuleFor(r => r.DateOfBirth, f => f.Person.DateOfBirth)
+                .RuleFor(r => r.Weight, f => f.Random.Short(40, 120))
+                .RuleFor(r => r.Account, f => f.Random.Int(0, 100_000) / 100m)
+                .RuleFor(r => r.Letter, f => (char)f.Random.Int(97, 122))
+                .Generate(amount);
         }
 
         private static (string fileFormat, string fileName, int amount, int startId) HandleParameters(IConfigurationRoot configurationRoot)
