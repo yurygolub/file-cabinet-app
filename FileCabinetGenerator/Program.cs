@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
+using System.Xml.Serialization;
 using FileCabinetGenerator.Configuration;
+using FileCabinetGenerator.Serialization;
 using Microsoft.Extensions.Configuration;
 
 namespace FileCabinetGenerator
@@ -113,6 +116,25 @@ namespace FileCabinetGenerator
                 throw new ArgumentNullException(nameof(streamWriter));
             }
 
+            FileCabinetRecordSerializable[] fileCabinetRecords = records
+                .Select(r =>
+                    new FileCabinetRecordSerializable
+                    {
+                        Id = r.Id,
+                        FullName = new FullName
+                        {
+                            FirstName = r.FirstName,
+                            LastName = r.LastName,
+                        },
+                        DateOfBirth = r.DateOfBirth.ToString("dd/MM/yyyy"),
+                        Weight = r.Weight,
+                        Account = r.Account,
+                        Letter = r.Letter,
+                    })
+                .ToArray();
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(FileCabinetRecordSerializable[]), new XmlRootAttribute("records"));
+
             XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
             {
                 Indent = true,
@@ -120,49 +142,8 @@ namespace FileCabinetGenerator
             };
 
             using XmlWriter xmlWriter = XmlWriter.Create(streamWriter, xmlWriterSettings);
-            xmlWriter.WriteStartDocument();
-            xmlWriter.WriteStartElement("records");
 
-            foreach (var record in records)
-            {
-                Write(xmlWriter, record);
-            }
-
-            xmlWriter.WriteEndDocument();
-
-            static void Write(XmlWriter xmlWriter, FileCabinetRecord fileCabinetRecord)
-            {
-                if (fileCabinetRecord is null)
-                {
-                    throw new ArgumentNullException(nameof(fileCabinetRecord));
-                }
-
-                xmlWriter.WriteStartElement("record");
-                xmlWriter.WriteAttributeString("id", $"{fileCabinetRecord.Id}");
-
-                xmlWriter.WriteStartElement("name");
-                xmlWriter.WriteAttributeString("first", $"{fileCabinetRecord.FirstName}");
-                xmlWriter.WriteAttributeString("last", $"{fileCabinetRecord.LastName}");
-                xmlWriter.WriteEndElement();
-
-                xmlWriter.WriteStartElement("dateOfBirth");
-                xmlWriter.WriteString(fileCabinetRecord.DateOfBirth.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture));
-                xmlWriter.WriteEndElement();
-
-                xmlWriter.WriteStartElement("weight");
-                xmlWriter.WriteString($"{fileCabinetRecord.Weight}");
-                xmlWriter.WriteEndElement();
-
-                xmlWriter.WriteStartElement("account");
-                xmlWriter.WriteString($"{fileCabinetRecord.Account}");
-                xmlWriter.WriteEndElement();
-
-                xmlWriter.WriteStartElement("letter");
-                xmlWriter.WriteString($"{fileCabinetRecord.Letter}");
-                xmlWriter.WriteEndElement();
-
-                xmlWriter.WriteEndElement();
-            }
+            xmlSerializer.Serialize(xmlWriter, fileCabinetRecords);
         }
 
         private static IEnumerable<FileCabinetRecord> GenerateRecords(int amount, int startId)
