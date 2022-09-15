@@ -503,6 +503,7 @@ namespace FileCabinetApp
             Tuple<string, Action<StreamReader>>[] fileFormats = new Tuple<string, Action<StreamReader>>[]
             {
                 new Tuple<string, Action<StreamReader>>("csv", snapshot.LoadFromCsv),
+                new Tuple<string, Action<StreamReader>>("xml", snapshot.LoadFromXml),
             };
 
             string[] parameters = input.Split(' ', 2);
@@ -527,21 +528,8 @@ namespace FileCabinetApp
                 const int fileNameIndex = 1;
                 string fileName = parameters[fileNameIndex];
 
-                try
+                if (!LoadFromFile(fileName, fileFormats[index].Item2))
                 {
-                    using FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
-                    using StreamReader streamReader = new StreamReader(fileStream);
-
-                    snapshot.LoadFromCsv(streamReader);
-                }
-                catch (IOException ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    return;
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Console.WriteLine(ex.Message);
                     return;
                 }
 
@@ -553,6 +541,29 @@ namespace FileCabinetApp
             {
                 Console.WriteLine($"There is no '{fileFormat}' file format.");
             }
+        }
+
+        private static bool LoadFromFile(string fileName, Action<StreamReader> format)
+        {
+            try
+            {
+                using FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                using StreamReader streamReader = new StreamReader(fileStream);
+
+                format(streamReader);
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+
+            return true;
         }
     }
 }

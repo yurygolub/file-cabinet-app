@@ -88,5 +88,13 @@ namespace FileCabinetApp.Snapshot
             FileCabinetRecordCsvReader recordCsvReader = new FileCabinetRecordCsvReader(streamReader);
             this.importedRecords = recordCsvReader.ReadAll();
         }
+
+        public void LoadFromXml(StreamReader streamReader)
+        {
+            _ = streamReader ?? throw new ArgumentNullException(nameof(streamReader));
+
+            FileCabinetRecordXmlReader recordXmlReader = new FileCabinetRecordXmlReader(streamReader);
+            this.importedRecords = recordXmlReader.ReadAll();
+        }
     }
 }
