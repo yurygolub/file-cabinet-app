@@ -8,6 +8,17 @@ namespace FileCabinetApp.Converters
     /// </summary>
     public class Converter : IConverter
     {
+        /// <inheritdoc/>
+        public Tuple<bool, string, int> IntConvert(string input)
+        {
+            if (int.TryParse(input, out int result))
+            {
+                return new Tuple<bool, string, int>(true, input, result);
+            }
+
+            return new Tuple<bool, string, int>(false, input, result);
+        }
+
         /// <summary>
         /// Convert to string.
         /// </summary>

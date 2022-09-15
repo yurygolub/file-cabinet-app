@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Xml;
 using FileCabinetApp.Record;
 using FileCabinetApp.Snapshot.Export;
+using FileCabinetApp.Snapshot.Import;
 
 namespace FileCabinetApp.Snapshot
 {
@@ -13,6 +15,7 @@ namespace FileCabinetApp.Snapshot
     public class FileCabinetServiceSnapshot
     {
         private readonly List<FileCabinetRecord> records;
+        private IList<FileCabinetRecord> importedRecords;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetServiceSnapshot"/> class.
@@ -22,6 +25,8 @@ namespace FileCabinetApp.Snapshot
         {
             this.records = new List<FileCabinetRecord>(records);
         }
+
+        public ReadOnlyCollection<FileCabinetRecord> Records => new ReadOnlyCollection<FileCabinetRecord>(this.importedRecords);
 
         /// <summary>
         /// Saves records to csv.
@@ -74,6 +79,14 @@ namespace FileCabinetApp.Snapshot
 
             xmlWriter.WriteEndDocument();
             xmlWriter.Close();
+        }
+
+        public void LoadFromCsv(StreamReader streamReader)
+        {
+            _ = streamReader ?? throw new ArgumentNullException(nameof(streamReader));
+
+            FileCabinetRecordCsvReader recordCsvReader = new FileCabinetRecordCsvReader(streamReader);
+            this.importedRecords = recordCsvReader.ReadAll();
         }
     }
 }

@@ -181,5 +181,72 @@ namespace FileCabinetApp.FileCabinetService
         {
             return new FileCabinetServiceSnapshot(this.list);
         }
+
+        /// <inheritdoc/>
+        public void Restore(FileCabinetServiceSnapshot snapshot)
+        {
+            foreach (var record in snapshot.Records)
+            {
+                var recordParameter = new RecordParameterObject(
+                    record.FirstName,
+                    record.LastName,
+                    record.DateOfBirth,
+                    record.Weight,
+                    record.Account,
+                    record.Letter);
+
+                try
+                {
+                    this.EditRecord(record.Id, recordParameter);
+                }
+                catch (ArgumentException)
+                {
+                    this.ImportRecord(record.Id, recordParameter);
+                }
+            }
+        }
+
+        private void ImportRecord(int id, RecordParameterObject record)
+        {
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
+
+            this.RecordValidator.ValidateParameters(record);
+
+            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
+            {
+                Id = id,
+                FirstName = record.FirstName,
+                LastName = record.LastName,
+                DateOfBirth = record.DateOfBirth,
+                Weight = record.Weight,
+                Account = record.Account,
+                Letter = record.Letter,
+            };
+
+            UpdateDictionary(this.firstNameDictionary, fileCabinetRecord, record.FirstName);
+            UpdateDictionary(this.lastNameDictionary, fileCabinetRecord, record.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, fileCabinetRecord, record.DateOfBirth);
+
+            this.list.Add(fileCabinetRecord);
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    dictionary[key].Add(record);
+                }
+                else
+                {
+                    List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                    {
+                        record,
+                    };
+                    dictionary.Add(key, records);
+                }
+            }
+        }
     }
 }

@@ -32,6 +32,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("edit", Edit),
             new Tuple<string, Action<string>>("find", Find),
             new Tuple<string, Action<string>>("export", Export),
+            new Tuple<string, Action<string>>("import", Import),
         };
 
         private static readonly string[][] HelpMessages = new string[][]
@@ -44,6 +45,12 @@ namespace FileCabinetApp
             new string[] { "edit", "edits a record", "The 'edit' command edits a record." },
             new string[] { "find", "finds a record", "The 'find' command finds a record." },
             new string[] { "export", "exports service data in specified format", "The 'export' command exports service data in specified format." },
+            new string[]
+            {
+                "import", "imports records from specified format, the imported records will added to the existing records, " +
+                "if the record with the specified id already exists in the storage, the existing record will be overwritten",
+                "The 'import' command imports records from specified format.",
+            },
         };
 
         private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
@@ -486,6 +493,65 @@ namespace FileCabinetApp
                 }
 
                 Console.WriteLine($"All records are exported to file {fileName}.");
+            }
+        }
+
+        private static void Import(string input)
+        {
+            FileCabinetServiceSnapshot snapshot = fileCabinetService.MakeSnapshot();
+
+            Tuple<string, Action<StreamReader>>[] fileFormats = new Tuple<string, Action<StreamReader>>[]
+            {
+                new Tuple<string, Action<StreamReader>>("csv", snapshot.LoadFromCsv),
+            };
+
+            string[] parameters = input.Split(' ', 2);
+            const int fileFormatIndex = 0;
+            string fileFormat = parameters[fileFormatIndex];
+
+            if (string.IsNullOrEmpty(fileFormat))
+            {
+                Console.WriteLine("You should write the parameters.");
+                return;
+            }
+
+            if (parameters.Length < 2)
+            {
+                Console.WriteLine("You should write the file name.");
+                return;
+            }
+
+            int index = Array.FindIndex(fileFormats, 0, fileFormats.Length, i => i.Item1.Equals(fileFormat, StringComparison.InvariantCultureIgnoreCase));
+            if (index >= 0)
+            {
+                const int fileNameIndex = 1;
+                string fileName = parameters[fileNameIndex];
+
+                try
+                {
+                    using FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                    using StreamReader streamReader = new StreamReader(fileStream);
+
+                    snapshot.LoadFromCsv(streamReader);
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return;
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return;
+                }
+
+                fileCabinetService.Restore(snapshot);
+
+                Console.WriteLine($"Records were imported from file {fileName}.");
+            }
+            else
+            {
+                Console.WriteLine($"There is no '{fileFormat}' file format.");
             }
         }
     }
