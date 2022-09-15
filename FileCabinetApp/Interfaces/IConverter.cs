@@ -8,6 +8,13 @@ namespace FileCabinetApp.Interfaces
     public interface IConverter
     {
         /// <summary>
+        /// Convert to int.
+        /// </summary>
+        /// <param name="input">Input data.</param>
+        /// <returns>Result of conversion.</returns>
+        public Tuple<bool, string, int> IntConvert(string input);
+
+        /// <summary>
         /// Convert to string.
         /// </summary>
         /// <param name="input">Input data.</param>

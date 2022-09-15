@@ -254,6 +254,32 @@ namespace FileCabinetApp.FileCabinetService
             return new FileCabinetServiceSnapshot(this.GetRecords());
         }
 
+        /// <inheritdoc/>
+        public int Restore(FileCabinetServiceSnapshot snapshot)
+        {
+            foreach (var record in snapshot.Records)
+            {
+                var recordParameter = new RecordParameterObject(
+                    record.FirstName,
+                    record.LastName,
+                    record.DateOfBirth,
+                    record.Weight,
+                    record.Account,
+                    record.Letter);
+
+                try
+                {
+                    this.EditRecord(record.Id, recordParameter);
+                }
+                catch (ArgumentException)
+                {
+                    this.ImportRecord(record.Id, recordParameter);
+                }
+            }
+
+            return snapshot.Records.Count;
+        }
+
         /// <summary>
         /// Releses unmanaged file resources.
         /// </summary>
@@ -352,6 +378,52 @@ namespace FileCabinetApp.FileCabinetService
                 }
 
                 return new string(buffer[..count]);
+            }
+        }
+
+        private int ImportRecord(int id, RecordParameterObject record)
+        {
+            if (record is null)
+            {
+                throw new ArgumentNullException(nameof(record));
+            }
+
+            byte[] bytes = RecordToBytes(id, record);
+            this.fileStream.Position = (id - 1) * RecordSize;
+            this.fileStream.Write(bytes);
+            this.fileStream.Flush();
+
+            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
+            {
+                Id = id,
+                FirstName = record.FirstName,
+                LastName = record.LastName,
+                DateOfBirth = record.DateOfBirth,
+                Weight = record.Weight,
+                Account = record.Account,
+                Letter = record.Letter,
+            };
+
+            UpdateDictionary(this.firstNameDictionary, fileCabinetRecord, fileCabinetRecord.FirstName);
+            UpdateDictionary(this.lastNameDictionary, fileCabinetRecord, fileCabinetRecord.LastName);
+            UpdateDictionary(this.dateOfBirthDictionary, fileCabinetRecord, fileCabinetRecord.DateOfBirth);
+
+            return id;
+
+            static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T key)
+            {
+                if (dictionary.ContainsKey(key))
+                {
+                    dictionary[key].Add(record);
+                }
+                else
+                {
+                    List<FileCabinetRecord> records = new List<FileCabinetRecord>
+                    {
+                        record,
+                    };
+                    dictionary.Add(key, records);
+                }
             }
         }
     }

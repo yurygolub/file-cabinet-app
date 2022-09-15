@@ -1,0 +1,261 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using System.Xml.Serialization;
+using Bogus;
+using FileCabinetGenerator.Configuration;
+using FileCabinetGenerator.Serialization;
+using Microsoft.Extensions.Configuration;
+
+namespace FileCabinetGenerator
+{
+    public class Program
+    {
+        private static readonly Command<CommandType>[] CommandLineParameters = new[]
+        {
+            new Command<CommandType>(new[] { "--output-type", "-t" }, CommandType.OutputType),
+            new Command<CommandType>(new[] { "--output", "-o" }, CommandType.Output),
+            new Command<CommandType>(new[] { "--records-amount", "-a" }, CommandType.RecordsAmount),
+            new Command<CommandType>(new[] { "--start-id", "-i" }, CommandType.StartId),
+        };
+
+        private enum CommandType
+        {
+            OutputType,
+            Output,
+            RecordsAmount,
+            StartId,
+        }
+
+        public static void Main(string[] args)
+        {
+            var configurationRoot = new ConfigurationBuilder()
+                .AddCustomCommandLine(args)
+                .Build();
+
+            var parameters = HandleParameters(configurationRoot);
+
+            var records = GenerateRecords(parameters.amount, parameters.startId);
+
+            Export(parameters.fileName, parameters.fileFormat, records);
+        }
+
+        private static void Export(string fileName, string fileFormat, IEnumerable<FileCabinetRecord> records)
+        {
+            if (string.Equals(fileFormat, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                SaveToFile($"{fileName}.{fileFormat}", records, SaveToCsv);
+            }
+            else if (string.Equals(fileFormat, "xml", StringComparison.OrdinalIgnoreCase))
+            {
+                SaveToFile($"{fileName}.{fileFormat}", records, SaveToXml);
+            }
+        }
+
+        private static void SaveToFile(string fileName, IEnumerable<FileCabinetRecord> records, Action<IEnumerable<FileCabinetRecord>, StreamWriter> saveToFile)
+        {
+            if (File.Exists(fileName))
+            {
+                Console.Write($"File is exist - rewrite {fileName}? [Y/n] ");
+                string input = Console.ReadLine();
+                if (input == "Y")
+                {
+                    Save(fileName, records, saveToFile);
+                }
+                else if (input == "n")
+                {
+                    return;
+                }
+            }
+            else
+            {
+                Save(fileName, records, saveToFile);
+            }
+
+            static void Save(string fileName, IEnumerable<FileCabinetRecord> records, Action<IEnumerable<FileCabinetRecord>, StreamWriter> saveToFile)
+            {
+                using FileStream fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write);
+                using StreamWriter streamWriter = new StreamWriter(fileStream);
+                saveToFile(records, streamWriter);
+
+                Console.WriteLine($"All records are exported to file {fileName}.");
+            }
+        }
+
+        private static void SaveToCsv(IEnumerable<FileCabinetRecord> records, StreamWriter streamWriter)
+        {
+            if (records is null)
+            {
+                throw new ArgumentNullException(nameof(records));
+            }
+
+            streamWriter.WriteLine("Id,First Name,Last Name,Date of Birth,Weight,Account,Letter");
+            foreach (var record in records)
+            {
+                WriteRecord(record, streamWriter);
+            }
+
+            static void WriteRecord(FileCabinetRecord fileCabinetRecord, StreamWriter streamWriter)
+            {
+                streamWriter.WriteLine($"{fileCabinetRecord.Id},{fileCabinetRecord.FirstName},{fileCabinetRecord.LastName}," +
+                        $"{fileCabinetRecord.DateOfBirth.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}," +
+                        $"{fileCabinetRecord.Weight},{fileCabinetRecord.Account},{fileCabinetRecord.Letter}");
+            }
+        }
+
+        private static void SaveToXml(IEnumerable<FileCabinetRecord> records, StreamWriter streamWriter)
+        {
+            if (records is null)
+            {
+                throw new ArgumentNullException(nameof(records));
+            }
+
+            if (streamWriter is null)
+            {
+                throw new ArgumentNullException(nameof(streamWriter));
+            }
+
+            FileCabinetRecordSerializable[] fileCabinetRecords = records
+                .Select(r =>
+                    new FileCabinetRecordSerializable
+                    {
+                        Id = r.Id,
+                        FullName = new FullName
+                        {
+                            FirstName = r.FirstName,
+                            LastName = r.LastName,
+                        },
+                        DateOfBirth = r.DateOfBirth.ToString("dd/MM/yyyy"),
+                        Weight = r.Weight,
+                        Account = r.Account,
+                        Letter = r.Letter,
+                    })
+                .ToArray();
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(FileCabinetRecordSerializable[]), new XmlRootAttribute("records"));
+
+            XmlWriterSettings xmlWriterSettings = new XmlWriterSettings()
+            {
+                Indent = true,
+                IndentChars = "\t",
+            };
+
+            using XmlWriter xmlWriter = XmlWriter.Create(streamWriter, xmlWriterSettings);
+
+            xmlSerializer.Serialize(xmlWriter, fileCabinetRecords);
+        }
+
+        private static IEnumerable<FileCabinetRecord> GenerateRecords(int amount, int startId)
+        {
+            return new Faker<FileCabinetRecord>("en")
+                .RuleFor(r => r.Id, f => startId++)
+                .RuleFor(r => r.FirstName, f => f.Name.FirstName())
+                .RuleFor(r => r.LastName, f => f.Name.LastName())
+                .RuleFor(r => r.DateOfBirth, f => f.Person.DateOfBirth)
+                .RuleFor(r => r.Weight, f => f.Random.Short(40, 120))
+                .RuleFor(r => r.Account, f => f.Random.Int(0, 100_000) / 100m)
+                .RuleFor(r => r.Letter, f => (char)f.Random.Int(97, 122))
+                .Generate(amount);
+        }
+
+        private static (string fileFormat, string fileName, int amount, int startId) HandleParameters(IConfigurationRoot configurationRoot)
+        {
+            (string fileFormat, string fileName, int amount, int startId) result = default;
+
+            foreach (var command in CommandLineParameters)
+            {
+                string value = GetValue(configurationRoot, command);
+                switch (command.CommandType)
+                {
+                    case CommandType.OutputType:
+                        if (value is null)
+                        {
+                            throw new ArgumentException("You must specify output type.");
+                        }
+
+                        result.fileFormat = value;
+                        break;
+
+                    case CommandType.Output:
+                        if (value is null)
+                        {
+                            throw new ArgumentException("You must specify output file name.");
+                        }
+
+                        result.fileName = value;
+                        break;
+
+                    case CommandType.RecordsAmount:
+                        if (value is null)
+                        {
+                            throw new ArgumentException("You must specify amount.");
+                        }
+
+                        int amount = int.Parse(value);
+                        if (amount < 0)
+                        {
+                            throw new ArgumentException("amount cannot be less than zero.");
+                        }
+
+                        result.amount = amount;
+                        break;
+
+                    case CommandType.StartId:
+                        if (value is null)
+                        {
+                            throw new ArgumentException("You must specify start id.");
+                        }
+
+                        int startId = int.Parse(value);
+                        if (startId < 1)
+                        {
+                            throw new ArgumentException("startId cannot be less than one.");
+                        }
+
+                        result.startId = startId;
+                        break;
+                }
+            }
+
+            return result;
+
+            static string GetValue(IConfigurationRoot configurationRoot, Command<CommandType> command)
+            {
+                string value = null;
+                foreach (string name in command.Names)
+                {
+                    value = configurationRoot[name];
+                    if (value != null)
+                    {
+                        break;
+                    }
+                }
+
+                return value;
+            }
+        }
+
+        private class Command<T>
+            where T : Enum
+        {
+            private readonly List<string> names;
+
+            public Command(IEnumerable<string> names, T commandType)
+            {
+                if (names is null)
+                {
+                    throw new ArgumentNullException(nameof(names));
+                }
+
+                this.names = new List<string>(names);
+                this.CommandType = commandType;
+            }
+
+            public IEnumerable<string> Names => this.names;
+
+            public T CommandType { get; }
+        }
+    }
+}

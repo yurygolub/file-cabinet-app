@@ -68,5 +68,11 @@ namespace FileCabinetApp.Interfaces
         /// </summary>
         /// <returns>Returns new FileCabinetServiceSnapshot object.</returns>
         public FileCabinetServiceSnapshot MakeSnapshot();
+
+        /// <summary>
+        /// Restores service data from <paramref name="snapshot"/> object.
+        /// </summary>
+        /// <param name="snapshot">FileCabinetServiceSnapshot object.</param>
+        public int Restore(FileCabinetServiceSnapshot snapshot);
     }
 }
