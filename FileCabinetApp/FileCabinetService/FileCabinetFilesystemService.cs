@@ -255,7 +255,7 @@ namespace FileCabinetApp.FileCabinetService
         }
 
         /// <inheritdoc/>
-        public void Restore(FileCabinetServiceSnapshot snapshot)
+        public int Restore(FileCabinetServiceSnapshot snapshot)
         {
             foreach (var record in snapshot.Records)
             {
@@ -276,6 +276,8 @@ namespace FileCabinetApp.FileCabinetService
                     this.ImportRecord(record.Id, recordParameter);
                 }
             }
+
+            return snapshot.Records.Count;
         }
 
         /// <summary>

@@ -533,9 +533,9 @@ namespace FileCabinetApp
                     return;
                 }
 
-                fileCabinetService.Restore(snapshot);
+                int count = fileCabinetService.Restore(snapshot);
 
-                Console.WriteLine($"Records were imported from file {fileName}.");
+                Console.WriteLine($"{count} records were imported from {fileName}.");
             }
             else
             {
