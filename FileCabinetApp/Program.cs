@@ -34,6 +34,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("export", Export),
             new Tuple<string, Action<string>>("import", Import),
             new Tuple<string, Action<string>>("remove", Remove),
+            new Tuple<string, Action<string>>("purge", Purge),
         };
 
         private static readonly string[][] HelpMessages = new string[][]
@@ -53,6 +54,7 @@ namespace FileCabinetApp
                 "The 'import' command imports records from specified format.",
             },
             new string[] { "remove", "removes records", "The 'remove' command removes records." },
+            new string[] { "purge", "defragmentates file", "The 'purge' command defragmentates file." },
         };
 
         private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
@@ -583,6 +585,16 @@ namespace FileCabinetApp
             else
             {
                 Console.WriteLine($"Record #{id} doesn't exist.");
+            }
+        }
+
+        private static void Purge(string args)
+        {
+            if (fileCabinetService is FileCabinetFilesystemService filesystemService)
+            {
+                int recordsPurged = filesystemService.Purge();
+                int recordsCount = fileCabinetService.GetStat();
+                Console.WriteLine($"Data file processing is completed: {recordsPurged} of {recordsCount} records were purged.");
             }
         }
     }
