@@ -208,6 +208,23 @@ namespace FileCabinetApp.FileCabinetService
             return snapshot.Records.Count;
         }
 
+        public bool Remove(int id)
+        {
+            if (id < 1 || id > this.list.Count)
+            {
+                return false;
+            }
+
+            var record = this.list[id - 1];
+
+            this.firstNameDictionary[record.FirstName].Remove(record);
+            this.lastNameDictionary[record.LastName].Remove(record);
+            this.dateOfBirthDictionary[record.DateOfBirth].Remove(record);
+
+            this.list.RemoveAt(id - 1);
+            return true;
+        }
+
         private void ImportRecord(int id, RecordParameterObject record)
         {
             if (record is null)

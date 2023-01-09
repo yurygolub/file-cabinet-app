@@ -200,8 +200,24 @@ namespace FileCabinetApp.FileCabinetService
         /// <inheritdoc/>
         public int GetStat()
         {
-            int length = (int)this.fileStream.Length;
-            return length / RecordSize;
+            return (int)(this.fileStream.Length / RecordSize);
+        }
+
+        public int CountOfRemoved()
+        {
+            int recordsCount = (int)(this.fileStream.Length / RecordSize);
+            int count = 0;
+            for (int i = 0; i < recordsCount; i++)
+            {
+                this.fileStream.Position = RecordSize * i;
+                int peekedByte = this.fileStream.ReadByte();
+                if ((peekedByte & 0b0100) != 0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         /// <inheritdoc/>
@@ -278,6 +294,54 @@ namespace FileCabinetApp.FileCabinetService
             }
 
             return snapshot.Records.Count;
+        }
+
+        public bool Remove(int id)
+        {
+            int recordPosition = RecordSize * (id - 1);
+            if (recordPosition < 0 || recordPosition > this.fileStream.Length)
+            {
+                return false;
+            }
+
+            this.fileStream.Position = recordPosition;
+            int peekedByte = this.fileStream.ReadByte();
+            this.fileStream.Position = recordPosition;
+            this.fileStream.WriteByte((byte)(peekedByte | 0b0100));
+            this.fileStream.Flush();
+
+            return true;
+        }
+
+        public int Purge()
+        {
+            using MemoryStream memoryStream = new MemoryStream();
+
+            int count = (int)(this.fileStream.Length / RecordSize);
+            int recordsPurged = 0;
+            for (int i = 0; i < count; i++)
+            {
+                int position = RecordSize * i;
+                this.fileStream.Position = position;
+                int peekedByte = this.fileStream.ReadByte();
+                this.fileStream.Position = position;
+                if ((peekedByte & 0b0100) == 0)
+                {
+                    byte[] buffer = new byte[RecordSize];
+                    this.fileStream.Read(buffer, 0, buffer.Length);
+                    memoryStream.Write(buffer, 0, buffer.Length);
+                }
+                else
+                {
+                    recordsPurged++;
+                }
+            }
+
+            this.fileStream.SetLength(0);
+            this.fileStream.Write(memoryStream.ToArray());
+            this.fileStream.Flush();
+
+            return recordsPurged;
         }
 
         /// <summary>

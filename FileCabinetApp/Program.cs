@@ -33,6 +33,8 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("find", Find),
             new Tuple<string, Action<string>>("export", Export),
             new Tuple<string, Action<string>>("import", Import),
+            new Tuple<string, Action<string>>("remove", Remove),
+            new Tuple<string, Action<string>>("purge", Purge),
         };
 
         private static readonly string[][] HelpMessages = new string[][]
@@ -51,6 +53,8 @@ namespace FileCabinetApp
                 "if the record with the specified id already exists in the storage, the existing record will be overwritten",
                 "The 'import' command imports records from specified format.",
             },
+            new string[] { "remove", "removes records", "The 'remove' command removes records." },
+            new string[] { "purge", "defragmentates file", "The 'purge' command defragmentates file." },
         };
 
         private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
@@ -270,8 +274,17 @@ namespace FileCabinetApp
 
         private static void Stat(string parameters)
         {
-            int recordsCount = Program.fileCabinetService.GetStat();
-            Console.WriteLine($"{recordsCount} record(s).");
+            if (fileCabinetService is FileCabinetFilesystemService filesystemService)
+            {
+                int count = filesystemService.GetStat();
+                int removed = filesystemService.CountOfRemoved();
+                Console.WriteLine($"{count} record(s). {removed} removed.");
+            }
+            else
+            {
+                int recordsCount = Program.fileCabinetService.GetStat();
+                Console.WriteLine($"{recordsCount} record(s).");
+            }
         }
 
         private static void Create(string parameters)
@@ -564,6 +577,34 @@ namespace FileCabinetApp
             }
 
             return true;
+        }
+
+        private static void Remove(string arg)
+        {
+            if (!int.TryParse(arg, out int id))
+            {
+                Console.WriteLine($"Couldn't parse '{arg}'.");
+                return;
+            }
+
+            if (fileCabinetService.Remove(id))
+            {
+                Console.WriteLine($"Record #{id} is removed.");
+            }
+            else
+            {
+                Console.WriteLine($"Record #{id} doesn't exist.");
+            }
+        }
+
+        private static void Purge(string args)
+        {
+            if (fileCabinetService is FileCabinetFilesystemService filesystemService)
+            {
+                int recordsCount = fileCabinetService.GetStat();
+                int recordsPurged = filesystemService.Purge();
+                Console.WriteLine($"Data file processing is completed: {recordsPurged} of {recordsCount} records were purged.");
+            }
         }
     }
 }
