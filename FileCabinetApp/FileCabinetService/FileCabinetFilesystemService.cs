@@ -200,8 +200,24 @@ namespace FileCabinetApp.FileCabinetService
         /// <inheritdoc/>
         public int GetStat()
         {
-            int length = (int)this.fileStream.Length;
-            return length / RecordSize;
+            return (int)(this.fileStream.Length / RecordSize);
+        }
+
+        public int CountOfRemoved()
+        {
+            int recordsCount = (int)(this.fileStream.Length / RecordSize);
+            int count = 0;
+            for (int i = 0; i < recordsCount; i++)
+            {
+                this.fileStream.Position = RecordSize * i;
+                int peekedByte = this.fileStream.ReadByte();
+                if ((peekedByte & 0b0100) != 0)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         /// <inheritdoc/>
@@ -293,6 +309,7 @@ namespace FileCabinetApp.FileCabinetService
             this.fileStream.Position = recordPosition;
             this.fileStream.WriteByte((byte)(peekedByte | 0b0100));
             this.fileStream.Flush();
+
             return true;
         }
 
