@@ -74,5 +74,7 @@ namespace FileCabinetApp.Interfaces
         /// </summary>
         /// <param name="snapshot">FileCabinetServiceSnapshot object.</param>
         public int Restore(FileCabinetServiceSnapshot snapshot);
+
+        public bool Remove(int id);
     }
 }

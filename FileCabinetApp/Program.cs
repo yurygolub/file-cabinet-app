@@ -33,6 +33,7 @@ namespace FileCabinetApp
             new Tuple<string, Action<string>>("find", Find),
             new Tuple<string, Action<string>>("export", Export),
             new Tuple<string, Action<string>>("import", Import),
+            new Tuple<string, Action<string>>("remove", Remove),
         };
 
         private static readonly string[][] HelpMessages = new string[][]
@@ -51,6 +52,7 @@ namespace FileCabinetApp
                 "if the record with the specified id already exists in the storage, the existing record will be overwritten",
                 "The 'import' command imports records from specified format.",
             },
+            new string[] { "remove", "removes records", "The 'remove' command removes records." },
         };
 
         private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
@@ -564,6 +566,24 @@ namespace FileCabinetApp
             }
 
             return true;
+        }
+
+        private static void Remove(string arg)
+        {
+            if (!int.TryParse(arg, out int id))
+            {
+                Console.WriteLine($"Couldn't parse '{arg}'.");
+                return;
+            }
+
+            if (fileCabinetService.Remove(id))
+            {
+                Console.WriteLine($"Record #{id} is removed.");
+            }
+            else
+            {
+                Console.WriteLine($"Record #{id} doesn't exist.");
+            }
         }
     }
 }

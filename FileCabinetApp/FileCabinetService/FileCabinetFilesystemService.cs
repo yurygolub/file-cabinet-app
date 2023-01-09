@@ -280,6 +280,21 @@ namespace FileCabinetApp.FileCabinetService
             return snapshot.Records.Count;
         }
 
+        public bool Remove(int id)
+        {
+            int recordPosition = RecordSize * (id - 1);
+            if (recordPosition < 0 || recordPosition > this.fileStream.Length)
+            {
+                return false;
+            }
+
+            this.fileStream.Position = recordPosition;
+            int peekedByte = this.fileStream.ReadByte();
+            this.fileStream.Position = recordPosition;
+            this.fileStream.WriteByte((byte)(peekedByte | 0b0100));
+            return true;
+        }
+
         /// <summary>
         /// Releses unmanaged file resources.
         /// </summary>
