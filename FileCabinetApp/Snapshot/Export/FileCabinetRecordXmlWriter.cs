@@ -17,7 +17,7 @@ namespace FileCabinetApp.Snapshot.Export
         /// <param name="xmlWriter">Xml writer.</param>
         public FileCabinetRecordXmlWriter(XmlWriter xmlWriter)
         {
-            this.writer = xmlWriter;
+            this.writer = xmlWriter ?? throw new ArgumentNullException(nameof(xmlWriter));
         }
 
         /// <summary>
@@ -26,10 +26,7 @@ namespace FileCabinetApp.Snapshot.Export
         /// <param name="fileCabinetRecord">File cabinet record.</param>
         public void Write(FileCabinetRecord fileCabinetRecord)
         {
-            if (fileCabinetRecord is null)
-            {
-                throw new ArgumentNullException(nameof(fileCabinetRecord));
-            }
+            _ = fileCabinetRecord ?? throw new ArgumentNullException(nameof(fileCabinetRecord));
 
             this.writer.WriteStartElement("record");
             this.writer.WriteAttributeString("id", $"{fileCabinetRecord.Id}");

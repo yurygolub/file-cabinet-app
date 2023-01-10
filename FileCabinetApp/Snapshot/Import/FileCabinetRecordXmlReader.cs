@@ -15,9 +15,7 @@ namespace FileCabinetApp.Snapshot.Import
 
         public FileCabinetRecordXmlReader(StreamReader reader)
         {
-            _ = reader ?? throw new ArgumentNullException(nameof(reader));
-
-            this.reader = reader;
+            this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
         }
 
         public IList<FileCabinetRecord> ReadAll()
@@ -28,10 +26,10 @@ namespace FileCabinetApp.Snapshot.Import
 
             FileCabinetRecordSerializable[] serializableRecords = xmlSerializer.Deserialize(xmlReader) as FileCabinetRecordSerializable[];
 
-            return this.MapRecords(serializableRecords).ToList();
+            return MapRecords(serializableRecords).ToList();
         }
 
-        private IEnumerable<FileCabinetRecord> MapRecords(IEnumerable<FileCabinetRecordSerializable> records)
+        private static IEnumerable<FileCabinetRecord> MapRecords(IEnumerable<FileCabinetRecordSerializable> records)
         {
             foreach (var record in records)
             {

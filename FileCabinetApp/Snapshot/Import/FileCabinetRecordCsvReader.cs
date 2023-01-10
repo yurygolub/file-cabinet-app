@@ -15,9 +15,7 @@ namespace FileCabinetApp.Snapshot.Import
 
         public FileCabinetRecordCsvReader(StreamReader reader)
         {
-            _ = reader ?? throw new ArgumentNullException(nameof(reader));
-
-            this.reader = reader;
+            this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
             this.converter = new Converter();
         }
 

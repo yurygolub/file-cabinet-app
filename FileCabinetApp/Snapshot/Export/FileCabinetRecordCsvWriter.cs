@@ -17,7 +17,7 @@ namespace FileCabinetApp.Snapshot.Export
         /// <param name="textWriter">Text writer.</param>
         public FileCabinetRecordCsvWriter(TextWriter textWriter)
         {
-            this.writer = textWriter;
+            this.writer = textWriter ?? throw new ArgumentNullException(nameof(textWriter));
         }
 
         /// <summary>
@@ -26,10 +26,7 @@ namespace FileCabinetApp.Snapshot.Export
         /// <param name="fileCabinetRecord">File cabinet record.</param>
         public void Write(FileCabinetRecord fileCabinetRecord)
         {
-            if (fileCabinetRecord is null)
-            {
-                throw new ArgumentNullException(nameof(fileCabinetRecord));
-            }
+            _ = fileCabinetRecord ?? throw new ArgumentNullException(nameof(fileCabinetRecord));
 
             this.writer.WriteLine($"{fileCabinetRecord.Id},{fileCabinetRecord.FirstName},{fileCabinetRecord.LastName}," +
                     $"{fileCabinetRecord.DateOfBirth.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture)}," +

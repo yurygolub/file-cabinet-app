@@ -131,7 +131,7 @@ namespace FileCabinetApp.CommandHandlers
 
         private static void List(string parameters)
         {
-            FileCabinetRecord[] records = (FileCabinetRecord[])Program.fileCabinetService.GetRecords();
+            var records = Program.fileCabinetService.GetRecords();
             PrintRecords(records);
         }
 
