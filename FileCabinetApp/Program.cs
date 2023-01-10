@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using FileCabinetApp.CommandHandlers;
+using FileCabinetApp.Converters;
 using FileCabinetApp.FileCabinetService;
 using FileCabinetApp.Interfaces;
+using FileCabinetApp.Record;
 using FileCabinetApp.Validators;
 
 namespace FileCabinetApp
@@ -39,6 +41,8 @@ namespace FileCabinetApp
             Console.WriteLine(Program.HintMessage);
             Console.WriteLine();
 
+            ICommandHandler handler = CreateCommandHandlers();
+
             do
             {
                 Console.Write("> ");
@@ -54,14 +58,93 @@ namespace FileCabinetApp
 
                 const int parametersIndex = 1;
                 var parameters = inputs.Length > 1 ? inputs[parametersIndex] : string.Empty;
-                CreateCommandHandlers().Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
+                handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
             }
             while (isRunning);
         }
 
+        public static void InputRecord(out RecordParameterObject record)
+        {
+            IConverter converter = new Converter();
+
+            Console.Write("First name: ");
+            string firstName = ReadInput(converter.StringConvert, inputValidator.FirstNameValidate);
+
+            Console.Write("Last name: ");
+            string lastName = ReadInput(converter.StringConvert, inputValidator.LastNameValidate);
+
+            Console.Write("Date of birth: ");
+            DateTime dateOfBirth = ReadInput(converter.DateConvert, inputValidator.DateOfBirtheValidate);
+
+            Console.Write("Weight: ");
+            short weight = ReadInput(converter.ShortConvert, inputValidator.WeightValidate);
+
+            Console.Write("Account: ");
+            decimal account = ReadInput(converter.DecimalConvert, inputValidator.AccountValidate);
+
+            Console.Write("Letter: ");
+            char letter = ReadInput(converter.CharConvert, inputValidator.LetterValidate);
+
+            record = new RecordParameterObject(firstName, lastName, dateOfBirth, weight, account, letter);
+        }
+
+        public static void PrintRecords(IReadOnlyCollection<FileCabinetRecord> records)
+        {
+            foreach (var record in records)
+            {
+                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
+                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
+                    $"{record.Weight}, {record.Account}, {record.Letter}");
+            }
+        }
+
         private static ICommandHandler CreateCommandHandlers()
         {
-            return new CommandHandler();
+            var createHandler = new CreateCommandHandler();
+
+            createHandler
+                .SetNext(new EditCommandHandler())
+                .SetNext(new ExitCommandHandler())
+                .SetNext(new ExportCommandHandler())
+                .SetNext(new FindCommandHandler())
+                .SetNext(new HelpCommandHandler())
+                .SetNext(new ImportCommandHandler())
+                .SetNext(new ListCommandHandler())
+                .SetNext(new PurgeCommandHandler())
+                .SetNext(new RemoveCommandHandler())
+                .SetNext(new StatCommandHandler())
+                .SetNext(new DefaultHandler());
+
+            return createHandler;
+        }
+
+        private static T ReadInput<T>(Func<string, Tuple<bool, string, T>> converter, Func<T, Tuple<bool, string>> validator)
+        {
+            do
+            {
+                T value;
+
+                string input = Console.ReadLine();
+                Tuple<bool, string, T> conversionResult = converter(input);
+
+                if (!conversionResult.Item1)
+                {
+                    Console.WriteLine($"Conversion failed: {conversionResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                value = conversionResult.Item3;
+
+                Tuple<bool, string> validationResult = validator(value);
+                if (!validationResult.Item1)
+                {
+                    Console.WriteLine($"Validation failed: {validationResult.Item2}. Please, correct your input.");
+                    continue;
+                }
+
+                return value;
+            }
+            while (true);
         }
 
         private static void CommandHandler(string[] args)

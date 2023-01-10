@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FileCabinetApp.CommandHandlers
+﻿namespace FileCabinetApp.CommandHandlers
 {
     public abstract class CommandHandlerBase : ICommandHandler
     {
@@ -8,9 +6,20 @@ namespace FileCabinetApp.CommandHandlers
 
         public ICommandHandler SetNext(ICommandHandler commandHandler)
         {
-            throw new NotImplementedException();
+            this.nextHandler = commandHandler;
+            return commandHandler;
         }
 
-        public abstract void Handle(AppCommandRequest request);
+        public virtual AppCommandRequest Handle(AppCommandRequest request)
+        {
+            if (this.nextHandler != null)
+            {
+                return this.nextHandler.Handle(request);
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

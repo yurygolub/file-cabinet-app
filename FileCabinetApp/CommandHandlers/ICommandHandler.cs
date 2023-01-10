@@ -4,6 +4,6 @@
     {
         ICommandHandler SetNext(ICommandHandler commandHandler);
 
-        void Handle(AppCommandRequest request);
+        AppCommandRequest Handle(AppCommandRequest request);
     }
 }
