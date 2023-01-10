@@ -4,13 +4,11 @@ using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class StatCommandHandler : CommandHandlerBase
+    public class StatCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public StatCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -19,7 +17,7 @@ namespace FileCabinetApp.CommandHandlers
 
             if (request.Command == "stat")
             {
-                if (this.fileCabinetService is FileCabinetFilesystemService filesystemService)
+                if (this.service is FileCabinetFilesystemService filesystemService)
                 {
                     int count = filesystemService.GetStat();
                     int removed = filesystemService.CountOfRemoved();
@@ -27,7 +25,7 @@ namespace FileCabinetApp.CommandHandlers
                 }
                 else
                 {
-                    int recordsCount = this.fileCabinetService.GetStat();
+                    int recordsCount = this.service.GetStat();
                     Console.WriteLine($"{recordsCount} record(s).");
                 }
             }

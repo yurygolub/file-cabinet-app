@@ -5,13 +5,11 @@ using FileCabinetApp.Record;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class FindCommandHandler : CommandHandlerBase
+    public class FindCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public FindCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -39,17 +37,17 @@ namespace FileCabinetApp.CommandHandlers
                 IReadOnlyCollection<FileCabinetRecord> result = new List<FileCabinetRecord>();
                 if (string.Equals("firstname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    result = this.fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                    result = this.service.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
                 }
                 else if (string.Equals("lastname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    result = this.fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                    result = this.service.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
                 }
                 else if (string.Equals("dateofbirth", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (DateTime.TryParse(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty), out DateTime dateOfBirth))
                     {
-                        result = this.fileCabinetService.FindByDateOfBirth(dateOfBirth);
+                        result = this.service.FindByDateOfBirth(dateOfBirth);
                     }
                     else
                     {

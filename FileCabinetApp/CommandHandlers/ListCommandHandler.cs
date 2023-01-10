@@ -3,13 +3,11 @@ using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class ListCommandHandler : CommandHandlerBase
+    public class ListCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public ListCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -18,7 +16,7 @@ namespace FileCabinetApp.CommandHandlers
 
             if (request.Command == "list")
             {
-                var records = this.fileCabinetService.GetRecords();
+                var records = this.service.GetRecords();
                 Program.PrintRecords(records);
             }
             else

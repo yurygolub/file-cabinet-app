@@ -5,13 +5,11 @@ using FileCabinetApp.Snapshot;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class ExportCommandHandler : CommandHandlerBase
+    public class ExportCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public ExportCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -20,7 +18,7 @@ namespace FileCabinetApp.CommandHandlers
 
             if (request.Command == "export")
             {
-                FileCabinetServiceSnapshot fileCabinetServiceSnapshot = this.fileCabinetService.MakeSnapshot();
+                FileCabinetServiceSnapshot fileCabinetServiceSnapshot = this.service.MakeSnapshot();
 
                 Tuple<string, Action<StreamWriter>>[] fileFormats = new Tuple<string, Action<StreamWriter>>[]
                 {

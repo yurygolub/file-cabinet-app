@@ -4,13 +4,11 @@ using FileCabinetApp.Record;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class EditCommandHandler : CommandHandlerBase
+    public class EditCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public EditCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -27,7 +25,7 @@ namespace FileCabinetApp.CommandHandlers
 
                 try
                 {
-                    this.fileCabinetService.IsRecordExist(id);
+                    this.service.IsRecordExist(id);
                 }
                 catch (ArgumentException ex)
                 {
@@ -36,7 +34,7 @@ namespace FileCabinetApp.CommandHandlers
                 }
 
                 Program.InputRecord(out RecordParameterObject record);
-                this.fileCabinetService.EditRecord(id, record);
+                this.service.EditRecord(id, record);
                 Console.WriteLine($"Record #{id} is updated.");
             }
             else

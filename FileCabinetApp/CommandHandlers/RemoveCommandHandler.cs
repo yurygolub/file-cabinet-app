@@ -3,13 +3,11 @@ using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class RemoveCommandHandler : CommandHandlerBase
+    public class RemoveCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public RemoveCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -24,7 +22,7 @@ namespace FileCabinetApp.CommandHandlers
                     return null;
                 }
 
-                if (this.fileCabinetService.Remove(id))
+                if (this.service.Remove(id))
                 {
                     Console.WriteLine($"Record #{id} is removed.");
                 }

@@ -4,13 +4,11 @@ using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class ExitCommandHandler : CommandHandlerBase
+    public class ExitCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public ExitCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -22,7 +20,7 @@ namespace FileCabinetApp.CommandHandlers
                 Console.WriteLine("Exiting an application...");
                 Program.isRunning = false;
 
-                if (this.fileCabinetService is FileCabinetFilesystemService filesystemService)
+                if (this.service is FileCabinetFilesystemService filesystemService)
                 {
                     filesystemService.Dispose();
                 }

@@ -4,13 +4,11 @@ using FileCabinetApp.Record;
 
 namespace FileCabinetApp.CommandHandlers
 {
-    public class CreateCommandHandler : CommandHandlerBase
+    public class CreateCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IFileCabinetService fileCabinetService;
-
         public CreateCommandHandler(IFileCabinetService fileCabinetService)
+            : base(fileCabinetService)
         {
-            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -20,7 +18,7 @@ namespace FileCabinetApp.CommandHandlers
             if (request.Command == "create")
             {
                 Program.InputRecord(out RecordParameterObject record);
-                int id = this.fileCabinetService.CreateRecord(record);
+                int id = this.service.CreateRecord(record);
                 Console.WriteLine($"Record #{id} is created.");
             }
             else
