@@ -300,7 +300,7 @@ namespace FileCabinetApp
             PrintRecords(records);
         }
 
-        private static void PrintRecords(FileCabinetRecord[] records)
+        private static void PrintRecords(IReadOnlyCollection<FileCabinetRecord> records)
         {
             foreach (var record in records)
             {
@@ -405,20 +405,20 @@ namespace FileCabinetApp
                 return;
             }
 
-            FileCabinetRecord[] result = Array.Empty<FileCabinetRecord>();
+            IReadOnlyCollection<FileCabinetRecord> result = new List<FileCabinetRecord>();
             if (string.Equals("firstname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
-                result = (FileCabinetRecord[])fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                result = fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
             else if (string.Equals("lastname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
-                result = (FileCabinetRecord[])fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                result = fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
             }
             else if (string.Equals("dateofbirth", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
             {
                 if (DateTime.TryParse(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty), out DateTime dateOfBirth))
                 {
-                    result = (FileCabinetRecord[])fileCabinetService.FindByDateOfBirth(dateOfBirth);
+                    result = fileCabinetService.FindByDateOfBirth(dateOfBirth);
                 }
                 else
                 {
