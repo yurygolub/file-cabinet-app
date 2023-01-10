@@ -6,9 +6,12 @@ namespace FileCabinetApp.CommandHandlers
 {
     public class ExitCommandHandler : ServiceCommandHandlerBase
     {
-        public ExitCommandHandler(IFileCabinetService fileCabinetService)
+        private readonly Action exit;
+
+        public ExitCommandHandler(IFileCabinetService fileCabinetService, Action exit)
             : base(fileCabinetService)
         {
+            this.exit = exit;
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -18,7 +21,7 @@ namespace FileCabinetApp.CommandHandlers
             if (request.Command == "exit")
             {
                 Console.WriteLine("Exiting an application...");
-                Program.isRunning = false;
+                this.exit?.Invoke();
 
                 if (this.service is FileCabinetFilesystemService filesystemService)
                 {

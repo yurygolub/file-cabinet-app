@@ -15,8 +15,6 @@ namespace FileCabinetApp
     /// </summary>
     public static class Program
     {
-        public static bool isRunning = true;
-
         private const string DeveloperName = "Yury Golub";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
         private const string PathToDB = "cabinet-records.db";
@@ -29,6 +27,7 @@ namespace FileCabinetApp
 
         private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
         private static IValidator inputValidator = new DefaultInputValidator();
+        private static bool isRunning = true;
 
         /// <summary>
         /// The entry point of application.
@@ -104,7 +103,7 @@ namespace FileCabinetApp
 
             createHandler
                 .SetNext(new EditCommandHandler(fileCabinetService))
-                .SetNext(new ExitCommandHandler(fileCabinetService))
+                .SetNext(new ExitCommandHandler(fileCabinetService, () => isRunning = false))
                 .SetNext(new ExportCommandHandler(fileCabinetService))
                 .SetNext(new FindCommandHandler(fileCabinetService))
                 .SetNext(new HelpCommandHandler())
