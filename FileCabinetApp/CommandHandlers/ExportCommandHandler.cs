@@ -1,18 +1,26 @@
 ﻿using System;
 using System.IO;
+using FileCabinetApp.Interfaces;
 using FileCabinetApp.Snapshot;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class ExportCommandHandler : CommandHandlerBase
     {
+        private readonly IFileCabinetService fileCabinetService;
+
+        public ExportCommandHandler(IFileCabinetService fileCabinetService)
+        {
+            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
+        }
+
         public override AppCommandRequest Handle(AppCommandRequest request)
         {
             _ = request ?? throw new ArgumentNullException(nameof(request));
 
             if (request.Command == "export")
             {
-                FileCabinetServiceSnapshot fileCabinetServiceSnapshot = Program.fileCabinetService.MakeSnapshot();
+                FileCabinetServiceSnapshot fileCabinetServiceSnapshot = this.fileCabinetService.MakeSnapshot();
 
                 Tuple<string, Action<StreamWriter>>[] fileFormats = new Tuple<string, Action<StreamWriter>>[]
                 {

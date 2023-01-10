@@ -1,17 +1,25 @@
 ﻿using System;
 using FileCabinetApp.FileCabinetService;
+using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class StatCommandHandler : CommandHandlerBase
     {
+        private readonly IFileCabinetService fileCabinetService;
+
+        public StatCommandHandler(IFileCabinetService fileCabinetService)
+        {
+            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
+        }
+
         public override AppCommandRequest Handle(AppCommandRequest request)
         {
             _ = request ?? throw new ArgumentNullException(nameof(request));
 
             if (request.Command == "stat")
             {
-                if (Program.fileCabinetService is FileCabinetFilesystemService filesystemService)
+                if (this.fileCabinetService is FileCabinetFilesystemService filesystemService)
                 {
                     int count = filesystemService.GetStat();
                     int removed = filesystemService.CountOfRemoved();
@@ -19,7 +27,7 @@ namespace FileCabinetApp.CommandHandlers
                 }
                 else
                 {
-                    int recordsCount = Program.fileCabinetService.GetStat();
+                    int recordsCount = this.fileCabinetService.GetStat();
                     Console.WriteLine($"{recordsCount} record(s).");
                 }
             }

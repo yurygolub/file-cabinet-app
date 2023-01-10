@@ -1,18 +1,26 @@
 ﻿using System;
 using System.IO;
+using FileCabinetApp.Interfaces;
 using FileCabinetApp.Snapshot;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class ImportCommandHandler : CommandHandlerBase
     {
+        private readonly IFileCabinetService fileCabinetService;
+
+        public ImportCommandHandler(IFileCabinetService fileCabinetService)
+        {
+            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
+        }
+
         public override AppCommandRequest Handle(AppCommandRequest request)
         {
             _ = request ?? throw new ArgumentNullException(nameof(request));
 
             if (request.Command == "import")
             {
-                FileCabinetServiceSnapshot snapshot = Program.fileCabinetService.MakeSnapshot();
+                FileCabinetServiceSnapshot snapshot = this.fileCabinetService.MakeSnapshot();
 
                 Tuple<string, Action<StreamReader>>[] fileFormats = new Tuple<string, Action<StreamReader>>[]
                 {
@@ -47,7 +55,7 @@ namespace FileCabinetApp.CommandHandlers
                         return null;
                     }
 
-                    int count = Program.fileCabinetService.Restore(snapshot);
+                    int count = this.fileCabinetService.Restore(snapshot);
 
                     Console.WriteLine($"{count} records were imported from {fileName}.");
                 }

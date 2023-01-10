@@ -16,9 +16,6 @@ namespace FileCabinetApp
     public static class Program
     {
         public static bool isRunning = true;
-        public static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
-
-        public static IValidator inputValidator = new DefaultInputValidator();
 
         private const string DeveloperName = "Yury Golub";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
@@ -30,6 +27,9 @@ namespace FileCabinetApp
             new Tuple<string, string, string[], Action<string>>("--validation-rules", "-v", new string[] { "default", "custom" }, SetValidationRule),
         };
 
+        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
+        private static IValidator inputValidator = new DefaultInputValidator();
+
         /// <summary>
         /// The entry point of application.
         /// </summary>
@@ -39,7 +39,7 @@ namespace FileCabinetApp
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
             CommandHandler(args);
             Console.WriteLine(Program.HintMessage);
-            Console.WriteLine();
+            Console.WriteLine(fileCabinetService);
 
             ICommandHandler handler = CreateCommandHandlers();
 
@@ -100,19 +100,19 @@ namespace FileCabinetApp
 
         private static ICommandHandler CreateCommandHandlers()
         {
-            var createHandler = new CreateCommandHandler();
+            var createHandler = new CreateCommandHandler(fileCabinetService);
 
             createHandler
-                .SetNext(new EditCommandHandler())
-                .SetNext(new ExitCommandHandler())
-                .SetNext(new ExportCommandHandler())
-                .SetNext(new FindCommandHandler())
+                .SetNext(new EditCommandHandler(fileCabinetService))
+                .SetNext(new ExitCommandHandler(fileCabinetService))
+                .SetNext(new ExportCommandHandler(fileCabinetService))
+                .SetNext(new FindCommandHandler(fileCabinetService))
                 .SetNext(new HelpCommandHandler())
-                .SetNext(new ImportCommandHandler())
-                .SetNext(new ListCommandHandler())
-                .SetNext(new PurgeCommandHandler())
-                .SetNext(new RemoveCommandHandler())
-                .SetNext(new StatCommandHandler())
+                .SetNext(new ImportCommandHandler(fileCabinetService))
+                .SetNext(new ListCommandHandler(fileCabinetService))
+                .SetNext(new PurgeCommandHandler(fileCabinetService))
+                .SetNext(new RemoveCommandHandler(fileCabinetService))
+                .SetNext(new StatCommandHandler(fileCabinetService))
                 .SetNext(new DefaultHandler());
 
             return createHandler;

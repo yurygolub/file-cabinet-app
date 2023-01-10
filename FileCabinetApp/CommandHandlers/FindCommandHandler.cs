@@ -1,11 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using FileCabinetApp.Interfaces;
 using FileCabinetApp.Record;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class FindCommandHandler : CommandHandlerBase
     {
+        private readonly IFileCabinetService fileCabinetService;
+
+        public FindCommandHandler(IFileCabinetService fileCabinetService)
+        {
+            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
+        }
+
         public override AppCommandRequest Handle(AppCommandRequest request)
         {
             _ = request ?? throw new ArgumentNullException(nameof(request));
@@ -31,17 +39,17 @@ namespace FileCabinetApp.CommandHandlers
                 IReadOnlyCollection<FileCabinetRecord> result = new List<FileCabinetRecord>();
                 if (string.Equals("firstname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    result = Program.fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                    result = this.fileCabinetService.FindByFirstName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
                 }
                 else if (string.Equals("lastname", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
-                    result = Program.fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
+                    result = this.fileCabinetService.FindByLastName(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty));
                 }
                 else if (string.Equals("dateofbirth", arrayOfParameters[IndexPropertyName], StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (DateTime.TryParse(arrayOfParameters[IndexOfTextToSearch].Replace("\"", string.Empty), out DateTime dateOfBirth))
                     {
-                        result = Program.fileCabinetService.FindByDateOfBirth(dateOfBirth);
+                        result = this.fileCabinetService.FindByDateOfBirth(dateOfBirth);
                     }
                     else
                     {

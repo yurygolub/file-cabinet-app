@@ -1,10 +1,18 @@
 ﻿using System;
 using FileCabinetApp.FileCabinetService;
+using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class ExitCommandHandler : CommandHandlerBase
     {
+        private readonly IFileCabinetService fileCabinetService;
+
+        public ExitCommandHandler(IFileCabinetService fileCabinetService)
+        {
+            this.fileCabinetService = fileCabinetService ?? throw new ArgumentNullException(nameof(fileCabinetService));
+        }
+
         public override AppCommandRequest Handle(AppCommandRequest request)
         {
             _ = request ?? throw new ArgumentNullException(nameof(request));
@@ -14,7 +22,7 @@ namespace FileCabinetApp.CommandHandlers
                 Console.WriteLine("Exiting an application...");
                 Program.isRunning = false;
 
-                if (Program.fileCabinetService is FileCabinetFilesystemService filesystemService)
+                if (this.fileCabinetService is FileCabinetFilesystemService filesystemService)
                 {
                     filesystemService.Dispose();
                 }
