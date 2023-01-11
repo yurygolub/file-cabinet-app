@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using FileCabinetApp.Interfaces;
+using FileCabinetApp.Record;
 
 namespace FileCabinetApp.CommandHandlers
 {
     public class ListCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IRecordPrinter printer;
+        private readonly Action<IEnumerable<FileCabinetRecord>> printer;
 
-        public ListCommandHandler(IFileCabinetService fileCabinetService, IRecordPrinter printer)
+        public ListCommandHandler(IFileCabinetService fileCabinetService, Action<IEnumerable<FileCabinetRecord>> printer)
             : base(fileCabinetService)
         {
             this.printer = printer ?? throw new ArgumentNullException(nameof(printer));
@@ -20,7 +22,7 @@ namespace FileCabinetApp.CommandHandlers
             if (request.Command == "list")
             {
                 var records = this.service.GetRecords();
-                this.printer.Print(records);
+                this.printer(records);
             }
             else
             {

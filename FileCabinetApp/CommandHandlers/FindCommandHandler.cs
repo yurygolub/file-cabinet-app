@@ -7,9 +7,9 @@ namespace FileCabinetApp.CommandHandlers
 {
     public class FindCommandHandler : ServiceCommandHandlerBase
     {
-        private readonly IRecordPrinter printer;
+        private readonly Action<IEnumerable<FileCabinetRecord>> printer;
 
-        public FindCommandHandler(IFileCabinetService fileCabinetService, IRecordPrinter printer)
+        public FindCommandHandler(IFileCabinetService fileCabinetService, Action<IEnumerable<FileCabinetRecord>> printer)
             : base(fileCabinetService)
         {
             this.printer = printer ?? throw new ArgumentNullException(nameof(printer));
@@ -62,7 +62,7 @@ namespace FileCabinetApp.CommandHandlers
                     Console.WriteLine($"The '{arrayOfParameters[IndexPropertyName]}' property is not exist.");
                 }
 
-                this.printer.Print(result);
+                this.printer(result);
             }
             else
             {

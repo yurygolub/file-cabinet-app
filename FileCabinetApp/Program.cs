@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using FileCabinetApp.CommandHandlers;
 using FileCabinetApp.Converters;
@@ -87,20 +88,28 @@ namespace FileCabinetApp
             record = new RecordParameterObject(firstName, lastName, dateOfBirth, weight, account, letter);
         }
 
+        private static void DefaultRecordPrint(IEnumerable<FileCabinetRecord> records)
+        {
+            foreach (var record in records)
+            {
+                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
+                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", CultureInfo.InvariantCulture)}, " +
+                    $"{record.Weight}, {record.Account}, {record.Letter}");
+            }
+        }
+
         private static ICommandHandler CreateCommandHandlers()
         {
             var createHandler = new CreateCommandHandler(fileCabinetService);
-
-            var printer = new DefaultRecordPrinter();
 
             createHandler
                 .SetNext(new EditCommandHandler(fileCabinetService))
                 .SetNext(new ExitCommandHandler(fileCabinetService, () => isRunning = false))
                 .SetNext(new ExportCommandHandler(fileCabinetService))
-                .SetNext(new FindCommandHandler(fileCabinetService, printer))
+                .SetNext(new FindCommandHandler(fileCabinetService, DefaultRecordPrint))
                 .SetNext(new HelpCommandHandler())
                 .SetNext(new ImportCommandHandler(fileCabinetService))
-                .SetNext(new ListCommandHandler(fileCabinetService, printer))
+                .SetNext(new ListCommandHandler(fileCabinetService, DefaultRecordPrint))
                 .SetNext(new PurgeCommandHandler(fileCabinetService))
                 .SetNext(new RemoveCommandHandler(fileCabinetService))
                 .SetNext(new StatCommandHandler(fileCabinetService))
