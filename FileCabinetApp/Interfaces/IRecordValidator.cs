@@ -11,6 +11,6 @@ namespace FileCabinetApp.Interfaces
         /// Checks the validity of the entered data.
         /// </summary>
         /// <param name="record">Record.</param>
-        public abstract void ValidateParameters(RecordParameterObject record);
+        void ValidateParameters(RecordParameterObject record);
     }
 }

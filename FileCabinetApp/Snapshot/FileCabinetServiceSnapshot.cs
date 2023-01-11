@@ -68,7 +68,7 @@ namespace FileCabinetApp.Snapshot
             };
 
             XmlWriter xmlWriter = XmlWriter.Create(streamWriter, xmlWriterSettings);
-            FileCabinetRecordXmlWriter fileCabinetRecordXmlWriter = new FileCabinetRecordXmlWriter(xmlWriter);
+            var fileCabinetRecordXmlWriter = new FileCabinetRecordXmlWriter(xmlWriter);
             xmlWriter.WriteStartDocument();
             xmlWriter.WriteStartElement("records");
 
@@ -85,7 +85,7 @@ namespace FileCabinetApp.Snapshot
         {
             _ = streamReader ?? throw new ArgumentNullException(nameof(streamReader));
 
-            FileCabinetRecordCsvReader recordCsvReader = new FileCabinetRecordCsvReader(streamReader);
+            var recordCsvReader = new FileCabinetRecordCsvReader(streamReader);
             this.importedRecords = recordCsvReader.ReadAll();
         }
 
@@ -93,7 +93,7 @@ namespace FileCabinetApp.Snapshot
         {
             _ = streamReader ?? throw new ArgumentNullException(nameof(streamReader));
 
-            FileCabinetRecordXmlReader recordXmlReader = new FileCabinetRecordXmlReader(streamReader);
+            var recordXmlReader = new FileCabinetRecordXmlReader(streamReader);
             this.importedRecords = recordXmlReader.ReadAll();
         }
     }

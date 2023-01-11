@@ -29,31 +29,31 @@ namespace FileCabinetApp.Record
         /// <summary>
         /// Gets the first name.
         /// </summary>
-        public string FirstName { get; private set; }
+        public string FirstName { get; }
 
         /// <summary>
         /// Gets the last name.
         /// </summary>
-        public string LastName { get; private set; }
+        public string LastName { get; }
 
         /// <summary>
         /// Gets the date of birth.
         /// </summary>
-        public DateTime DateOfBirth { get; private set; }
+        public DateTime DateOfBirth { get; }
 
         /// <summary>
         /// Gets the weight.
         /// </summary>
-        public short Weight { get; private set; }
+        public short Weight { get; }
 
         /// <summary>
         /// Gets the account.
         /// </summary>
-        public decimal Account { get; private set; }
+        public decimal Account { get; }
 
         /// <summary>
         /// Gets the letter.
         /// </summary>
-        public char Letter { get; private set; }
+        public char Letter { get; }
     }
 }
