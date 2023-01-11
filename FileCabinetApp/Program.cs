@@ -87,28 +87,20 @@ namespace FileCabinetApp
             record = new RecordParameterObject(firstName, lastName, dateOfBirth, weight, account, letter);
         }
 
-        public static void PrintRecords(IReadOnlyCollection<FileCabinetRecord> records)
-        {
-            foreach (var record in records)
-            {
-                Console.WriteLine($"#{record.Id}, {record.FirstName}, {record.LastName}, " +
-                    $"{record.DateOfBirth.ToString("yyyy'-'MMM'-'dd", System.Globalization.CultureInfo.InvariantCulture)}, " +
-                    $"{record.Weight}, {record.Account}, {record.Letter}");
-            }
-        }
-
         private static ICommandHandler CreateCommandHandlers()
         {
             var createHandler = new CreateCommandHandler(fileCabinetService);
+
+            var printer = new DefaultRecordPrinter();
 
             createHandler
                 .SetNext(new EditCommandHandler(fileCabinetService))
                 .SetNext(new ExitCommandHandler(fileCabinetService, () => isRunning = false))
                 .SetNext(new ExportCommandHandler(fileCabinetService))
-                .SetNext(new FindCommandHandler(fileCabinetService))
+                .SetNext(new FindCommandHandler(fileCabinetService, printer))
                 .SetNext(new HelpCommandHandler())
                 .SetNext(new ImportCommandHandler(fileCabinetService))
-                .SetNext(new ListCommandHandler(fileCabinetService))
+                .SetNext(new ListCommandHandler(fileCabinetService, printer))
                 .SetNext(new PurgeCommandHandler(fileCabinetService))
                 .SetNext(new RemoveCommandHandler(fileCabinetService))
                 .SetNext(new StatCommandHandler(fileCabinetService))

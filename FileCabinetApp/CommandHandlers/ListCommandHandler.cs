@@ -5,9 +5,12 @@ namespace FileCabinetApp.CommandHandlers
 {
     public class ListCommandHandler : ServiceCommandHandlerBase
     {
-        public ListCommandHandler(IFileCabinetService fileCabinetService)
+        private readonly IRecordPrinter printer;
+
+        public ListCommandHandler(IFileCabinetService fileCabinetService, IRecordPrinter printer)
             : base(fileCabinetService)
         {
+            this.printer = printer ?? throw new ArgumentNullException(nameof(printer));
         }
 
         public override AppCommandRequest Handle(AppCommandRequest request)
@@ -17,7 +20,7 @@ namespace FileCabinetApp.CommandHandlers
             if (request.Command == "list")
             {
                 var records = this.service.GetRecords();
-                Program.PrintRecords(records);
+                this.printer.Print(records);
             }
             else
             {
