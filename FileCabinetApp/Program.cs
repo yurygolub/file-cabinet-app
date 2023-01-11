@@ -26,7 +26,7 @@ namespace FileCabinetApp
             new Tuple<string, string, string[], Action<string>>("--validation-rules", "-v", new string[] { "default", "custom" }, SetValidationRule),
         };
 
-        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
+        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new ValidatorBuilder().CreateDefault());
         private static IValidator inputValidator = new DefaultInputValidator();
         private static bool isRunning = true;
 
@@ -226,7 +226,7 @@ namespace FileCabinetApp
 
                 case "memory":
                 default:
-                    fileCabinetService = new FileCabinetMemoryService(new DefaultValidator());
+                    fileCabinetService = new FileCabinetMemoryService(new ValidatorBuilder().CreateDefault());
                     Console.WriteLine("Using memory.");
                     break;
             }
@@ -237,14 +237,14 @@ namespace FileCabinetApp
             switch (arg)
             {
                 case "custom":
-                    SetValidationRule(new CustomValidator());
+                    SetValidationRule(new ValidatorBuilder().CreateCustom());
                     inputValidator = new CustomInputValidator();
                     Console.WriteLine("Using custom validation rules.");
                     break;
 
                 case "default":
                 default:
-                    SetValidationRule(new DefaultValidator());
+                    SetValidationRule(new ValidatorBuilder().CreateDefault());
                     inputValidator = new DefaultInputValidator();
                     Console.WriteLine("Using default validation rules.");
                     break;
