@@ -23,7 +23,7 @@ namespace FileCabinetApp.CommandHandlers
                 Console.WriteLine("Exiting an application...");
                 this.exit?.Invoke();
 
-                if (this.service is FileCabinetFilesystemService filesystemService)
+                if (this.service is FileCabinetFilesystemService filesystemService) // this won't work with decorators
                 {
                     filesystemService.Dispose();
                 }

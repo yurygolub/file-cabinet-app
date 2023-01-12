@@ -12,5 +12,8 @@ namespace FileCabinetApp
 
         [Option("use-stopwatch", Required = false, HelpText = "Enable measuring the execution time of service methods.")]
         public bool UseStopwatch { get; set; }
+
+        [Option("use-logger", Required = false, HelpText = "Enable logging of service method calls.")]
+        public bool UseLogger { get; set; }
     }
 }
