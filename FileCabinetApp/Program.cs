@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using CommandLine;
 using FileCabinetApp.CommandHandlers;
 using FileCabinetApp.Converters;
@@ -9,6 +8,7 @@ using FileCabinetApp.FileCabinetService;
 using FileCabinetApp.Interfaces;
 using FileCabinetApp.Record;
 using FileCabinetApp.Validators;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FileCabinetApp
 {
@@ -19,7 +19,8 @@ namespace FileCabinetApp
     {
         private const string DeveloperName = "Yury Golub";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
-        private const string PathToDB = "cabinet-records.db";
+
+        private static readonly Startup Startup = new ();
 
         private static IFileCabinetService fileCabinetService;
         private static IRecordValidator recordValidator;
@@ -36,7 +37,7 @@ namespace FileCabinetApp
 
             Parser.Default.ParseArguments<Options>(args)
               .WithParsed(CommandHandler)
-              .WithNotParsed(HandleParseError);
+              .WithNotParsed(err => Environment.Exit(0));
 
             Console.WriteLine(Program.HintMessage);
 
@@ -172,7 +173,7 @@ namespace FileCabinetApp
             switch (opts.Storage)
             {
                 case "file":
-                    fileCabinetService = new FileCabinetFilesystemService(OpenFile());
+                    fileCabinetService = Startup.ServiceProvider.GetService<FileCabinetFilesystemService>();
                     Console.WriteLine("Using file.");
                     break;
 
@@ -187,21 +188,6 @@ namespace FileCabinetApp
                     Environment.Exit(0);
                     break;
             }
-        }
-
-        private static void HandleParseError(IEnumerable<Error> errs)
-        {
-            Environment.Exit(0);
-        }
-
-        private static FileStream OpenFile()
-        {
-            if (!File.Exists(PathToDB))
-            {
-                throw new FileNotFoundException($"File '{PathToDB}' not found.");
-            }
-
-            return new FileStream(PathToDB, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
     }
 }

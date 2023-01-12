@@ -21,10 +21,13 @@ namespace FileCabinetApp.FileCabinetService
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetFilesystemService"/> class.
         /// </summary>
-        /// <param name="fileStream">FileStream for working with database.</param>
-        public FileCabinetFilesystemService(FileStream fileStream)
+        /// <param name="pathToDB">Path to database.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="pathToDB"/> is null.</exception>
+        public FileCabinetFilesystemService(string pathToDB)
         {
-            this.fileStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
+            _ = pathToDB ?? throw new ArgumentNullException(nameof(pathToDB));
+
+            this.fileStream = new FileStream(pathToDB, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         /// <summary>
