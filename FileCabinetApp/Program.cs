@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
+using CommandLine;
 using FileCabinetApp.CommandHandlers;
 using FileCabinetApp.Converters;
 using FileCabinetApp.FileCabinetService;
 using FileCabinetApp.Interfaces;
 using FileCabinetApp.Record;
 using FileCabinetApp.Validators;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FileCabinetApp
 {
@@ -18,16 +19,12 @@ namespace FileCabinetApp
     {
         private const string DeveloperName = "Yury Golub";
         private const string HintMessage = "Enter your command, or enter 'help' to get help.";
-        private const string PathToDB = "cabinet-records.db";
 
-        private static readonly Tuple<string, string, string[], Action<string>>[] CommandLineParameters = new[]
-        {
-            new Tuple<string, string, string[], Action<string>>("--storage", "-s", new string[] { "memory", "file" }, SetStorage),
-            new Tuple<string, string, string[], Action<string>>("--validation-rules", "-v", new string[] { "default", "custom" }, SetValidationRule),
-        };
+        private static readonly Startup Startup = new ();
 
-        private static IFileCabinetService fileCabinetService = new FileCabinetMemoryService(new ValidatorBuilder().CreateDefault());
-        private static IValidator inputValidator = new DefaultInputValidator();
+        private static IFileCabinetService fileCabinetService;
+        private static IRecordValidator recordValidator;
+        private static IValidator inputValidator;
         private static bool isRunning = true;
 
         /// <summary>
@@ -37,9 +34,12 @@ namespace FileCabinetApp
         public static void Main(string[] args)
         {
             Console.WriteLine($"File Cabinet Application, developed by {Program.DeveloperName}");
-            CommandHandler(args);
+
+            Parser.Default.ParseArguments<Options>(args)
+              .WithParsed(CommandHandler)
+              .WithNotParsed(err => Environment.Exit(0));
+
             Console.WriteLine(Program.HintMessage);
-            Console.WriteLine(fileCabinetService);
 
             ICommandHandler handler = CreateCommandHandlers();
 
@@ -61,6 +61,11 @@ namespace FileCabinetApp
                 handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
             }
             while (isRunning);
+
+            if (fileCabinetService is FileCabinetFilesystemService service)
+            {
+                service.Dispose();
+            }
         }
 
         public static void InputRecord(out RecordParameterObject record)
@@ -147,126 +152,47 @@ namespace FileCabinetApp
             while (true);
         }
 
-        private static void CommandHandler(string[] args)
+        private static void CommandHandler(Options opts)
         {
-            Dictionary<string, string> commands = new Dictionary<string, string>();
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i].StartsWith("--"))
-                {
-                    string[] splitted = args[i].Split("=", 2);
-                    if (splitted.Length == 2)
-                    {
-                        HandleArgs(commands, splitted[0], splitted[1]);
-                    }
-                }
-                else if (args[i].StartsWith("-"))
-                {
-                    string value = args.Length > i + 1 ? args[i + 1] : string.Empty;
-                    HandleArgs(commands, args[i], value);
-                }
-            }
-
-            for (int i = 0; i < CommandLineParameters.Length; i++)
-            {
-                string key1 = CommandLineParameters[i].Item1, key2 = CommandLineParameters[i].Item2;
-                if (commands.ContainsKey(key1))
-                {
-                    CommandLineParameters[i].Item4(commands[key1]);
-                }
-                else if (commands.ContainsKey(key2))
-                {
-                    CommandLineParameters[i].Item4(commands[key2]);
-                }
-                else
-                {
-                    CommandLineParameters[i].Item4(string.Empty);
-                }
-            }
-
-            static void HandleArgs(Dictionary<string, string> commands, string key, string value)
-            {
-                string lowerKey = key.ToLower(), lowerValue = value.ToLower();
-                if (ValidateArgs(lowerKey, lowerValue))
-                {
-                    if (commands.ContainsKey(lowerKey))
-                    {
-                        commands[lowerKey] = lowerValue;
-                    }
-                    else
-                    {
-                        commands.Add(lowerKey, lowerValue);
-                    }
-                }
-            }
-
-            static bool ValidateArgs(string key, string value)
-            {
-                for (int i = 0; i < CommandLineParameters.Length; i++)
-                {
-                    if (CommandLineParameters[i].Item1 == key || CommandLineParameters[i].Item2 == key)
-                    {
-                        int index = Array.FindIndex(CommandLineParameters[i].Item3, (str) => str == value);
-                        return index != -1;
-                    }
-                }
-
-                return false;
-            }
-        }
-
-        private static void SetStorage(string arg)
-        {
-            switch (arg)
-            {
-                case "file":
-                    fileCabinetService = new FileCabinetFilesystemService(OpenFile());
-                    Console.WriteLine("Using file.");
-                    break;
-
-                case "memory":
-                default:
-                    fileCabinetService = new FileCabinetMemoryService(new ValidatorBuilder().CreateDefault());
-                    Console.WriteLine("Using memory.");
-                    break;
-            }
-        }
-
-        private static void SetValidationRule(string arg)
-        {
-            switch (arg)
+            switch (opts.ValidationRules)
             {
                 case "custom":
-                    SetValidationRule(new ValidatorBuilder().CreateCustom());
+                    recordValidator = new ValidatorBuilder().CreateCustom();
                     inputValidator = new CustomInputValidator();
                     Console.WriteLine("Using custom validation rules.");
                     break;
 
                 case "default":
-                default:
-                    SetValidationRule(new ValidatorBuilder().CreateDefault());
+                case "":
+                    recordValidator = new ValidatorBuilder().CreateDefault();
                     inputValidator = new DefaultInputValidator();
                     Console.WriteLine("Using default validation rules.");
                     break;
+
+                default:
+                    Console.WriteLine($"Wrong option: \'{opts.ValidationRules}\'");
+                    Environment.Exit(0);
+                    break;
             }
 
-            static void SetValidationRule(IRecordValidator recordValidator)
+            switch (opts.Storage)
             {
-                if (fileCabinetService is FileCabinetMemoryService)
-                {
+                case "file":
+                    fileCabinetService = Startup.ServiceProvider.GetService<FileCabinetFilesystemService>();
+                    Console.WriteLine("Using file.");
+                    break;
+
+                case "memory":
+                case "":
                     fileCabinetService = new FileCabinetMemoryService(recordValidator);
-                }
-            }
-        }
+                    Console.WriteLine("Using memory.");
+                    break;
 
-        private static FileStream OpenFile()
-        {
-            if (!File.Exists(PathToDB))
-            {
-                throw new FileNotFoundException($"File '{PathToDB}' not found.");
+                default:
+                    Console.WriteLine($"Wrong option: \'{opts.Storage}\'");
+                    Environment.Exit(0);
+                    break;
             }
-
-            return new FileStream(PathToDB, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
     }
 }

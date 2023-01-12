@@ -11,13 +11,13 @@ namespace FileCabinetApp.FileCabinetService
     /// </summary>
     public class FileCabinetMemoryService : IFileCabinetService
     {
-        private readonly List<FileCabinetRecord> list = new List<FileCabinetRecord>();
+        private readonly List<FileCabinetRecord> list = new ();
 
-        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
+        private readonly Dictionary<string, List<FileCabinetRecord>> firstNameDictionary = new ();
 
-        private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new Dictionary<string, List<FileCabinetRecord>>();
+        private readonly Dictionary<string, List<FileCabinetRecord>> lastNameDictionary = new ();
 
-        private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new Dictionary<DateTime, List<FileCabinetRecord>>();
+        private readonly Dictionary<DateTime, List<FileCabinetRecord>> dateOfBirthDictionary = new ();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileCabinetMemoryService"/> class.
@@ -25,7 +25,7 @@ namespace FileCabinetApp.FileCabinetService
         /// <param name="recordValidator">Record validator.</param>
         public FileCabinetMemoryService(IRecordValidator recordValidator)
         {
-            this.RecordValidator = recordValidator;
+            this.RecordValidator = recordValidator ?? throw new ArgumentNullException(nameof(recordValidator));
         }
 
         /// <summary>
@@ -36,10 +36,7 @@ namespace FileCabinetApp.FileCabinetService
         /// <inheritdoc/>
         public int CreateRecord(RecordParameterObject record)
         {
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
+            _ = record ?? throw new ArgumentNullException(nameof(record));
 
             this.RecordValidator.ValidateParameters(record);
 
@@ -91,13 +88,13 @@ namespace FileCabinetApp.FileCabinetService
         }
 
         /// <inheritdoc/>
-        public void EditRecord(int id, RecordParameterObject record)
+        public bool EditRecord(int id, RecordParameterObject record)
         {
-            this.IsRecordExist(id);
+            _ = record ?? throw new ArgumentNullException(nameof(record));
 
-            if (record is null)
+            if (!this.IsRecordExist(id))
             {
-                throw new ArgumentNullException(nameof(record));
+                return false;
             }
 
             UpdateDictionary(this.firstNameDictionary, this.list[id - 1], this.list[id - 1].FirstName, record.FirstName);
@@ -110,6 +107,8 @@ namespace FileCabinetApp.FileCabinetService
             this.list[id - 1].Weight = record.Weight;
             this.list[id - 1].Account = record.Account;
             this.list[id - 1].Letter = record.Letter;
+
+            return true;
 
             static void UpdateDictionary<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, FileCabinetRecord record, T oldValue, T newValue)
                 where T : IEquatable<T>
@@ -135,45 +134,23 @@ namespace FileCabinetApp.FileCabinetService
         }
 
         /// <inheritdoc/>
-        public void IsRecordExist(int id)
-        {
-            if (id < 1 || id > this.list.Count)
-            {
-                throw new ArgumentException($"#{id} record is not found.");
-            }
-        }
-
-        /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByFirstName(string firstName)
         {
-            if (!this.firstNameDictionary.ContainsKey(firstName))
-            {
-                return Array.Empty<FileCabinetRecord>();
-            }
-
-            return this.firstNameDictionary[firstName].ToArray();
+            _ = firstName ?? throw new ArgumentNullException(nameof(firstName));
+            return FindByKey(this.firstNameDictionary, firstName);
         }
 
         /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByLastName(string lastName)
         {
-            if (!this.lastNameDictionary.ContainsKey(lastName))
-            {
-                return Array.Empty<FileCabinetRecord>();
-            }
-
-            return this.lastNameDictionary[lastName].ToArray();
+            _ = lastName ?? throw new ArgumentNullException(nameof(lastName));
+            return FindByKey(this.lastNameDictionary, lastName);
         }
 
         /// <inheritdoc/>
         public IReadOnlyCollection<FileCabinetRecord> FindByDateOfBirth(DateTime dateOfBirth)
         {
-            if (!this.dateOfBirthDictionary.ContainsKey(dateOfBirth))
-            {
-                return Array.Empty<FileCabinetRecord>();
-            }
-
-            return this.dateOfBirthDictionary[dateOfBirth].ToArray();
+            return FindByKey(this.dateOfBirthDictionary, dateOfBirth);
         }
 
         /// <inheritdoc/>
@@ -195,11 +172,11 @@ namespace FileCabinetApp.FileCabinetService
                     record.Account,
                     record.Letter);
 
-                try
+                if (this.IsRecordExist(record.Id))
                 {
                     this.EditRecord(record.Id, recordParameter);
                 }
-                catch (ArgumentException)
+                else
                 {
                     this.ImportRecord(record.Id, recordParameter);
                 }
@@ -225,12 +202,24 @@ namespace FileCabinetApp.FileCabinetService
             return true;
         }
 
+        public bool IsRecordExist(int id)
+        {
+            return id >= 1 && id <= this.list.Count;
+        }
+
+        private static IReadOnlyCollection<FileCabinetRecord> FindByKey<T>(Dictionary<T, List<FileCabinetRecord>> dictionary, T key)
+        {
+            if (!dictionary.ContainsKey(key))
+            {
+                return Array.Empty<FileCabinetRecord>();
+            }
+
+            return dictionary[key].ToArray();
+        }
+
         private void ImportRecord(int id, RecordParameterObject record)
         {
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
+            _ = record ?? throw new ArgumentNullException(nameof(record));
 
             this.RecordValidator.ValidateParameters(record);
 

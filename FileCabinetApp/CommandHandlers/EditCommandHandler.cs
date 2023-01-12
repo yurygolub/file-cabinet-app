@@ -23,18 +23,13 @@ namespace FileCabinetApp.CommandHandlers
                     return null;
                 }
 
-                try
+                Program.InputRecord(out RecordParameterObject record);
+                if (!this.service.EditRecord(id, record))
                 {
-                    this.service.IsRecordExist(id);
-                }
-                catch (ArgumentException ex)
-                {
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"#{id} record is not found.");
                     return null;
                 }
 
-                Program.InputRecord(out RecordParameterObject record);
-                this.service.EditRecord(id, record);
                 Console.WriteLine($"Record #{id} is updated.");
             }
             else

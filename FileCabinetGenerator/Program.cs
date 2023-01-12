@@ -5,41 +5,37 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using Bogus;
-using FileCabinetGenerator.Configuration;
+using CommandLine;
 using FileCabinetGenerator.Serialization;
-using Microsoft.Extensions.Configuration;
 
 namespace FileCabinetGenerator
 {
     public class Program
     {
-        private static readonly Command<CommandType>[] CommandLineParameters = new[]
-        {
-            new Command<CommandType>(new[] { "--output-type", "-t" }, CommandType.OutputType),
-            new Command<CommandType>(new[] { "--output", "-o" }, CommandType.Output),
-            new Command<CommandType>(new[] { "--records-amount", "-a" }, CommandType.RecordsAmount),
-            new Command<CommandType>(new[] { "--start-id", "-i" }, CommandType.StartId),
-        };
-
-        private enum CommandType
-        {
-            OutputType,
-            Output,
-            RecordsAmount,
-            StartId,
-        }
-
         public static void Main(string[] args)
         {
-            var configurationRoot = new ConfigurationBuilder()
-                .AddCustomCommandLine(args)
-                .Build();
+            Options options = Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(HandleParsed)
+                .WithNotParsed(err => Environment.Exit(0)).Value;
 
-            var parameters = HandleParameters(configurationRoot);
+            var records = GenerateRecords(options.RecordsAmount, options.StartId);
 
-            var records = GenerateRecords(parameters.amount, parameters.startId);
+            Export(options.OutputFileName, options.OutputType, records);
+        }
 
-            Export(parameters.fileName, parameters.fileFormat, records);
+        private static void HandleParsed(Options options)
+        {
+            if (options.RecordsAmount < 0)
+            {
+                Console.WriteLine("Amount cannot be less than zero.");
+                Environment.Exit(0);
+            }
+
+            if (options.StartId < 1)
+            {
+                Console.WriteLine("Start id cannot be less than one.");
+                Environment.Exit(0);
+            }
         }
 
         private static void Export(string fileName, string fileFormat, IEnumerable<FileCabinetRecord> records)
@@ -107,15 +103,8 @@ namespace FileCabinetGenerator
 
         private static void SaveToXml(IEnumerable<FileCabinetRecord> records, StreamWriter streamWriter)
         {
-            if (records is null)
-            {
-                throw new ArgumentNullException(nameof(records));
-            }
-
-            if (streamWriter is null)
-            {
-                throw new ArgumentNullException(nameof(streamWriter));
-            }
+            _ = records ?? throw new ArgumentNullException(nameof(records));
+            _ = streamWriter ?? throw new ArgumentNullException(nameof(streamWriter));
 
             FileCabinetRecordSerializable[] fileCabinetRecords = records
                 .Select(r =>
@@ -158,104 +147,6 @@ namespace FileCabinetGenerator
                 .RuleFor(r => r.Account, f => f.Random.Int(0, 100_000) / 100m)
                 .RuleFor(r => r.Letter, f => (char)f.Random.Int(97, 122))
                 .Generate(amount);
-        }
-
-        private static (string fileFormat, string fileName, int amount, int startId) HandleParameters(IConfigurationRoot configurationRoot)
-        {
-            (string fileFormat, string fileName, int amount, int startId) result = default;
-
-            foreach (var command in CommandLineParameters)
-            {
-                string value = GetValue(configurationRoot, command);
-                switch (command.CommandType)
-                {
-                    case CommandType.OutputType:
-                        if (value is null)
-                        {
-                            throw new ArgumentException("You must specify output type.");
-                        }
-
-                        result.fileFormat = value;
-                        break;
-
-                    case CommandType.Output:
-                        if (value is null)
-                        {
-                            throw new ArgumentException("You must specify output file name.");
-                        }
-
-                        result.fileName = value;
-                        break;
-
-                    case CommandType.RecordsAmount:
-                        if (value is null)
-                        {
-                            throw new ArgumentException("You must specify amount.");
-                        }
-
-                        int amount = int.Parse(value);
-                        if (amount < 0)
-                        {
-                            throw new ArgumentException("amount cannot be less than zero.");
-                        }
-
-                        result.amount = amount;
-                        break;
-
-                    case CommandType.StartId:
-                        if (value is null)
-                        {
-                            throw new ArgumentException("You must specify start id.");
-                        }
-
-                        int startId = int.Parse(value);
-                        if (startId < 1)
-                        {
-                            throw new ArgumentException("startId cannot be less than one.");
-                        }
-
-                        result.startId = startId;
-                        break;
-                }
-            }
-
-            return result;
-
-            static string GetValue(IConfigurationRoot configurationRoot, Command<CommandType> command)
-            {
-                string value = null;
-                foreach (string name in command.Names)
-                {
-                    value = configurationRoot[name];
-                    if (value != null)
-                    {
-                        break;
-                    }
-                }
-
-                return value;
-            }
-        }
-
-        private class Command<T>
-            where T : Enum
-        {
-            private readonly List<string> names;
-
-            public Command(IEnumerable<string> names, T commandType)
-            {
-                if (names is null)
-                {
-                    throw new ArgumentNullException(nameof(names));
-                }
-
-                this.names = new List<string>(names);
-                this.CommandType = commandType;
-            }
-
-            public IEnumerable<string> Names => this.names;
-
-            public T CommandType { get; }
         }
     }
 }

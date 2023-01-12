@@ -34,13 +34,8 @@ namespace FileCabinetApp.Interfaces
         /// </summary>
         /// <param name="id">Id of editing record.</param>
         /// <param name="record">Record.</param>
-        public void EditRecord(int id, RecordParameterObject record);
-
-        /// <summary>
-        /// Checks if there is a record with the specified id.
-        /// </summary>
-        /// <param name="id">Record id.</param>
-        public void IsRecordExist(int id);
+        /// <returns>True if the record exists, otherwise false.</returns>
+        public bool EditRecord(int id, RecordParameterObject record);
 
         /// <summary>
         /// Finds all records with specified first name.
