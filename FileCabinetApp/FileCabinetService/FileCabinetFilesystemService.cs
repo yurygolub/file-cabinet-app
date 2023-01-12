@@ -24,14 +24,7 @@ namespace FileCabinetApp.FileCabinetService
         /// <param name="fileStream">FileStream for working with database.</param>
         public FileCabinetFilesystemService(FileStream fileStream)
         {
-            this.fileStream = fileStream;
-
-            List<FileCabinetRecord> records = new List<FileCabinetRecord>();
-            byte[] recordBuffer = new byte[RecordSize];
-            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
-            {
-                records.Add(BytesToRecord(recordBuffer));
-            }
+            this.fileStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
         }
 
         /// <summary>
@@ -45,10 +38,7 @@ namespace FileCabinetApp.FileCabinetService
         /// <inheritdoc/>
         public int CreateRecord(RecordParameterObject record)
         {
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
+            _ = record ?? throw new ArgumentNullException(nameof(record));
 
             int length = (int)this.fileStream.Length;
             int id = (length / RecordSize) + 1;
@@ -58,52 +48,22 @@ namespace FileCabinetApp.FileCabinetService
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
 
-            FileCabinetRecord fileCabinetRecord = new FileCabinetRecord
-            {
-                Id = id,
-                FirstName = record.FirstName,
-                LastName = record.LastName,
-                DateOfBirth = record.DateOfBirth,
-                Weight = record.Weight,
-                Account = record.Account,
-                Letter = record.Letter,
-            };
-
             return id;
         }
 
         /// <inheritdoc/>
         public void EditRecord(int id, RecordParameterObject record)
         {
+            _ = record ?? throw new ArgumentNullException(nameof(record));
+
             this.IsRecordExist(id);
 
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
-
             int recordPosition = RecordSize * (id - 1);
-
-            this.fileStream.Position = recordPosition;
-            byte[] recordBuffer = new byte[RecordSize];
-            this.fileStream.Read(recordBuffer, 0, RecordSize);
-            FileCabinetRecord oldRecord = BytesToRecord(recordBuffer);
 
             this.fileStream.Position = recordPosition;
             byte[] bytes = RecordToBytes(id, record);
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
-
-            FileCabinetRecord newRecord = new FileCabinetRecord
-            {
-                Id = id,
-                FirstName = record.FirstName,
-                LastName = record.LastName,
-                DateOfBirth = record.DateOfBirth,
-                Weight = record.Weight,
-                Account = record.Account,
-                Letter = record.Letter,
-            };
         }
 
         /// <inheritdoc/>
@@ -380,10 +340,7 @@ namespace FileCabinetApp.FileCabinetService
 
         private int ImportRecord(int id, RecordParameterObject record)
         {
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
+            _ = record ?? throw new ArgumentNullException(nameof(record));
 
             byte[] bytes = RecordToBytes(id, record);
             this.fileStream.Position = (id - 1) * RecordSize;

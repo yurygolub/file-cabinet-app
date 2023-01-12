@@ -25,7 +25,7 @@ namespace FileCabinetApp.FileCabinetService
         /// <param name="recordValidator">Record validator.</param>
         public FileCabinetMemoryService(IRecordValidator recordValidator)
         {
-            this.RecordValidator = recordValidator;
+            this.RecordValidator = recordValidator ?? throw new ArgumentNullException(nameof(recordValidator));
         }
 
         /// <summary>
