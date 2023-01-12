@@ -157,14 +157,14 @@ namespace FileCabinetApp
             switch (opts.ValidationRules)
             {
                 case "custom":
-                    recordValidator = new ValidatorBuilder().CreateCustom();
+                    recordValidator = new ValidatorBuilder().CreateCustom(Startup.Configuration);
                     inputValidator = new CustomInputValidator();
                     Console.WriteLine("Using custom validation rules.");
                     break;
 
                 case "default":
                 case "":
-                    recordValidator = new ValidatorBuilder().CreateDefault();
+                    recordValidator = new ValidatorBuilder().CreateDefault(Startup.Configuration);
                     inputValidator = new DefaultInputValidator();
                     Console.WriteLine("Using default validation rules.");
                     break;

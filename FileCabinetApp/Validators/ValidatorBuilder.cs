@@ -6,7 +6,7 @@ namespace FileCabinetApp.Validators
 {
     public class ValidatorBuilder
     {
-        private readonly List<IRecordValidator> validators = new List<IRecordValidator>();
+        private readonly List<IRecordValidator> validators = new ();
 
         public ValidatorBuilder ValidateFirstName(int minLength, int maxLength)
         {

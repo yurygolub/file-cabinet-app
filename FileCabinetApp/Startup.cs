@@ -12,6 +12,7 @@ namespace FileCabinetApp
             this.Configuration = new ConfigurationBuilder()
                 .SetBasePath(Environment.CurrentDirectory)
                 .AddJsonFile("appsettings.json")
+                .AddJsonFile("validation-rules.json")
                 .Build();
 
             this.ServiceProvider = this.ConfigureServices(new ServiceCollection())
