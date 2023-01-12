@@ -17,12 +17,9 @@ namespace FileCabinetApp.CommandHandlers
 
             if (request.Command == "purge")
             {
-                if (this.service is FileCabinetFilesystemService filesystemService)
-                {
-                    int recordsCount = this.service.GetStat();
-                    int recordsPurged = filesystemService.Purge();
-                    Console.WriteLine($"Data file processing is completed: {recordsPurged} of {recordsCount} records were purged.");
-                }
+                int recordsCount = this.service.GetStat();
+                int recordsPurged = this.service.Purge();
+                Console.WriteLine($"Data file processing is completed: {recordsPurged} of {recordsCount} records were purged.");
             }
             else
             {

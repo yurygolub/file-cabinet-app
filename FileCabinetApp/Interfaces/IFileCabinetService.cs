@@ -29,6 +29,8 @@ namespace FileCabinetApp.Interfaces
         /// <returns>The count of records.</returns>
         public int GetStat();
 
+        public int CountOfRemoved();
+
         /// <summary>
         /// Edits a record with the specified parameters.
         /// </summary>
@@ -72,5 +74,7 @@ namespace FileCabinetApp.Interfaces
         public int Restore(FileCabinetServiceSnapshot snapshot);
 
         public bool Remove(int id);
+
+        public int Purge();
     }
 }

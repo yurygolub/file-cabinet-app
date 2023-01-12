@@ -61,11 +61,6 @@ namespace FileCabinetApp
                 handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
             }
             while (isRunning);
-
-            if (fileCabinetService is FileCabinetFilesystemService service)
-            {
-                service.Dispose();
-            }
         }
 
         public static void InputRecord(out RecordParameterObject record)
@@ -192,6 +187,11 @@ namespace FileCabinetApp
                     Console.WriteLine($"Wrong option: \'{opts.Storage}\'");
                     Environment.Exit(0);
                     break;
+            }
+
+            if (opts.UseStopwatch)
+            {
+                fileCabinetService = new ServiceMeter(fileCabinetService);
             }
         }
     }
