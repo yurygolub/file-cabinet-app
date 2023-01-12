@@ -61,6 +61,11 @@ namespace FileCabinetApp
                 handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
             }
             while (isRunning);
+
+            if (fileCabinetService is FileCabinetFilesystemService service)
+            {
+                service.Dispose();
+            }
         }
 
         public static void InputRecord(out RecordParameterObject record)

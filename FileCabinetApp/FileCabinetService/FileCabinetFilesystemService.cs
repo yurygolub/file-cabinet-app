@@ -55,18 +55,20 @@ namespace FileCabinetApp.FileCabinetService
         }
 
         /// <inheritdoc/>
-        public void EditRecord(int id, RecordParameterObject record)
+        public bool EditRecord(int id, RecordParameterObject record)
         {
             _ = record ?? throw new ArgumentNullException(nameof(record));
 
-            this.IsRecordExist(id);
+            if (!this.IsRecordExist(id))
+            {
+                return false;
+            }
 
-            int recordPosition = RecordSize * (id - 1);
-
-            this.fileStream.Position = recordPosition;
+            this.fileStream.Position = this.FindRecordPosition(id);
             byte[] bytes = RecordToBytes(id, record);
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
+            return true;
         }
 
         /// <inheritdoc/>
@@ -125,17 +127,6 @@ namespace FileCabinetApp.FileCabinetService
         }
 
         /// <inheritdoc/>
-        public void IsRecordExist(int id)
-        {
-            int length = (int)this.fileStream.Length;
-            int count = length / RecordSize;
-            if (id < 1 || id > count)
-            {
-                throw new ArgumentException($"#{id} record is not found.");
-            }
-        }
-
-        /// <inheritdoc/>
         public FileCabinetServiceSnapshot MakeSnapshot()
         {
             return new FileCabinetServiceSnapshot(this.GetRecords());
@@ -154,11 +145,11 @@ namespace FileCabinetApp.FileCabinetService
                     record.Account,
                     record.Letter);
 
-                try
+                if (this.IsRecordExist(record.Id))
                 {
                     this.EditRecord(record.Id, recordParameter);
                 }
-                catch (ArgumentException)
+                else
                 {
                     this.ImportRecord(record.Id, recordParameter);
                 }
@@ -169,15 +160,15 @@ namespace FileCabinetApp.FileCabinetService
 
         public bool Remove(int id)
         {
-            int recordPosition = RecordSize * (id - 1);
-            if (recordPosition < 0 || recordPosition > this.fileStream.Length)
+            if (!this.IsRecordExist(id))
             {
                 return false;
             }
 
-            this.fileStream.Position = recordPosition;
+            long position = this.FindRecordPosition(id);
+            this.fileStream.Position = position;
             int peekedByte = this.fileStream.ReadByte();
-            this.fileStream.Position = recordPosition;
+            this.fileStream.Position = position;
             this.fileStream.WriteByte((byte)(peekedByte | 0b0100));
             this.fileStream.Flush();
 
@@ -193,11 +184,9 @@ namespace FileCabinetApp.FileCabinetService
             for (int i = 0; i < count; i++)
             {
                 int position = RecordSize * i;
-                this.fileStream.Position = position;
-                int peekedByte = this.fileStream.ReadByte();
-                this.fileStream.Position = position;
-                if ((peekedByte & 0b0100) == 0)
+                if (!this.IsRecordRemoved(position))
                 {
+                    this.fileStream.Position = position;
                     byte[] buffer = new byte[RecordSize];
                     this.fileStream.Read(buffer, 0, buffer.Length);
                     memoryStream.Write(buffer, 0, buffer.Length);
@@ -241,6 +230,21 @@ namespace FileCabinetApp.FileCabinetService
             }
 
             this.disposed = true;
+        }
+
+        private bool IsRecordExist(int id)
+        {
+            byte[] recordBuffer = new byte[RecordSize];
+            this.fileStream.Position = 0;
+            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
+            {
+                if (BytesToRecord(recordBuffer).Id == id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static byte[] RecordToBytes(int id, RecordParameterObject record)
@@ -323,11 +327,9 @@ namespace FileCabinetApp.FileCabinetService
             for (int i = 0; i < count; i++)
             {
                 int position = RecordSize * i;
-                this.fileStream.Position = position;
-                int peekedByte = this.fileStream.ReadByte();
-                this.fileStream.Position = position;
-                if ((peekedByte & 0b0100) == 0)
+                if (!this.IsRecordRemoved(position))
                 {
+                    this.fileStream.Position = position;
                     byte[] buffer = new byte[RecordSize];
                     this.fileStream.Read(buffer, 0, buffer.Length);
                     var record = BytesToRecord(buffer);
@@ -346,11 +348,36 @@ namespace FileCabinetApp.FileCabinetService
             _ = record ?? throw new ArgumentNullException(nameof(record));
 
             byte[] bytes = RecordToBytes(id, record);
-            this.fileStream.Position = (id - 1) * RecordSize;
+            this.fileStream.Position = this.FindRecordPosition(id);
             this.fileStream.Write(bytes);
             this.fileStream.Flush();
 
             return id;
+        }
+
+        private bool IsRecordRemoved(long position)
+        {
+            this.fileStream.Position = position;
+            int peekedByte = this.fileStream.ReadByte();
+            return (peekedByte & 0b0100) != 0;
+        }
+
+        private long FindRecordPosition(int id)
+        {
+            byte[] recordBuffer = new byte[RecordSize];
+            this.fileStream.Position = 0;
+            long position = 0;
+            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
+            {
+                if (BytesToRecord(recordBuffer).Id == id)
+                {
+                    break;
+                }
+
+                position = this.fileStream.Position;
+            }
+
+            return position;
         }
     }
 }
