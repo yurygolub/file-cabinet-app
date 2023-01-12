@@ -44,22 +44,22 @@ namespace FileCabinetApp.FileCabinetService
 
         public IReadOnlyCollection<FileCabinetRecord> GetRecords()
         {
-            return this.ExecuteWithTiming(() => this.service.GetRecords(), nameof(this.GetRecords));
+            return this.ExecuteWithTiming(this.service.GetRecords, nameof(this.GetRecords));
         }
 
         public int GetStat()
         {
-            return this.ExecuteWithTiming(() => this.service.GetStat(), nameof(this.GetStat));
+            return this.ExecuteWithTiming(this.service.GetStat, nameof(this.GetStat));
         }
 
         public int CountOfRemoved()
         {
-            return this.ExecuteWithTiming(() => this.service.CountOfRemoved(), nameof(this.CountOfRemoved));
+            return this.ExecuteWithTiming(this.service.CountOfRemoved, nameof(this.CountOfRemoved));
         }
 
         public FileCabinetServiceSnapshot MakeSnapshot()
         {
-            return this.ExecuteWithTiming(() => this.service.MakeSnapshot(), nameof(this.MakeSnapshot));
+            return this.ExecuteWithTiming(this.service.MakeSnapshot, nameof(this.MakeSnapshot));
         }
 
         public bool Remove(int id)
@@ -74,7 +74,7 @@ namespace FileCabinetApp.FileCabinetService
 
         public int Purge()
         {
-            return this.ExecuteWithTiming(() => this.service.Purge(), nameof(this.Purge));
+            return this.ExecuteWithTiming(this.service.Purge, nameof(this.Purge));
         }
 
         private T ExecuteWithTiming<T>(Func<T> func, string name)
