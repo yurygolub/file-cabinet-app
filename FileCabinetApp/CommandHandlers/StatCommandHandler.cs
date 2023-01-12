@@ -1,5 +1,4 @@
 ﻿using System;
-using FileCabinetApp.FileCabinetService;
 using FileCabinetApp.Interfaces;
 
 namespace FileCabinetApp.CommandHandlers
@@ -17,17 +16,9 @@ namespace FileCabinetApp.CommandHandlers
 
             if (request.Command == "stat")
             {
-                if (this.service is FileCabinetFilesystemService filesystemService)
-                {
-                    int count = filesystemService.GetStat();
-                    int removed = filesystemService.CountOfRemoved();
-                    Console.WriteLine($"{count} record(s). {removed} removed.");
-                }
-                else
-                {
-                    int recordsCount = this.service.GetStat();
-                    Console.WriteLine($"{recordsCount} record(s).");
-                }
+                int count = this.service.GetStat();
+                int removed = this.service.CountOfRemoved();
+                Console.WriteLine($"{count} record(s). {removed} removed.");
             }
             else
             {

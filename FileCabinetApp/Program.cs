@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using CommandLine;
 using FileCabinetApp.CommandHandlers;
 using FileCabinetApp.Converters;
@@ -26,6 +27,7 @@ namespace FileCabinetApp
         private static IRecordValidator recordValidator;
         private static IValidator inputValidator;
         private static bool isRunning = true;
+        private static TextWriter textWriter;
 
         /// <summary>
         /// The entry point of application.
@@ -59,13 +61,12 @@ namespace FileCabinetApp
                 const int parametersIndex = 1;
                 var parameters = inputs.Length > 1 ? inputs[parametersIndex] : string.Empty;
                 handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
+
+                textWriter.Flush();
             }
             while (isRunning);
 
-            if (fileCabinetService is FileCabinetFilesystemService service)
-            {
-                service.Dispose();
-            }
+            textWriter.Dispose();
         }
 
         public static void InputRecord(out RecordParameterObject record)
@@ -157,14 +158,14 @@ namespace FileCabinetApp
             switch (opts.ValidationRules)
             {
                 case "custom":
-                    recordValidator = new ValidatorBuilder().CreateCustom();
+                    recordValidator = new ValidatorBuilder().CreateCustom(Startup.Configuration);
                     inputValidator = new CustomInputValidator();
                     Console.WriteLine("Using custom validation rules.");
                     break;
 
                 case "default":
                 case "":
-                    recordValidator = new ValidatorBuilder().CreateDefault();
+                    recordValidator = new ValidatorBuilder().CreateDefault(Startup.Configuration);
                     inputValidator = new DefaultInputValidator();
                     Console.WriteLine("Using default validation rules.");
                     break;
@@ -192,6 +193,18 @@ namespace FileCabinetApp
                     Console.WriteLine($"Wrong option: \'{opts.Storage}\'");
                     Environment.Exit(0);
                     break;
+            }
+
+            if (opts.UseStopwatch)
+            {
+                fileCabinetService = new ServiceMeter(fileCabinetService);
+            }
+
+            if (opts.UseLogger)
+            {
+                textWriter = new StreamWriter(Startup.Configuration["PathToLogFile"], true);
+
+                fileCabinetService = new ServiceLogger(fileCabinetService, textWriter);
             }
         }
     }

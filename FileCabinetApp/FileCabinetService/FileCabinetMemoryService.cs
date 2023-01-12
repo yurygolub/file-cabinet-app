@@ -87,6 +87,11 @@ namespace FileCabinetApp.FileCabinetService
             return this.list.Count;
         }
 
+        public int CountOfRemoved()
+        {
+            return 0;
+        }
+
         /// <inheritdoc/>
         public bool EditRecord(int id, RecordParameterObject record)
         {
@@ -200,6 +205,11 @@ namespace FileCabinetApp.FileCabinetService
 
             this.list.RemoveAt(id - 1);
             return true;
+        }
+
+        public int Purge()
+        {
+            return 0;
         }
 
         public bool IsRecordExist(int id)
