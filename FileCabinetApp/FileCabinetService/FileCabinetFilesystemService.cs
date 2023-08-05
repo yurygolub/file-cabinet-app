@@ -232,21 +232,6 @@ namespace FileCabinetApp.FileCabinetService
             this.disposed = true;
         }
 
-        private bool IsRecordExist(int id)
-        {
-            byte[] recordBuffer = new byte[RecordSize];
-            this.fileStream.Position = 0;
-            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
-            {
-                if (BytesToRecord(recordBuffer).Id == id)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         private static byte[] RecordToBytes(int id, RecordParameterObject record)
         {
             using MemoryStream memoryStream = new MemoryStream();
@@ -320,6 +305,21 @@ namespace FileCabinetApp.FileCabinetService
             }
         }
 
+        private bool IsRecordExist(int id)
+        {
+            byte[] recordBuffer = new byte[RecordSize];
+            this.fileStream.Position = 0;
+            while (this.fileStream.Read(recordBuffer, 0, RecordSize) > 0)
+            {
+                if (BytesToRecord(recordBuffer).Id == id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private IReadOnlyCollection<FileCabinetRecord> FindByPredicate(Predicate<FileCabinetRecord> predicate)
         {
             List<FileCabinetRecord> records = new List<FileCabinetRecord>();
@@ -345,8 +345,6 @@ namespace FileCabinetApp.FileCabinetService
 
         private int ImportRecord(int id, RecordParameterObject record)
         {
-            _ = record ?? throw new ArgumentNullException(nameof(record));
-
             byte[] bytes = RecordToBytes(id, record);
             this.fileStream.Position = this.FindRecordPosition(id);
             this.fileStream.Write(bytes);

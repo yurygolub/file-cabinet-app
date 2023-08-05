@@ -121,11 +121,11 @@ namespace FileCabinetApp.FileCabinetService
 
         private T ExecuteWithLogging<T>(Func<T> func, string name, string log)
         {
-            this.textWriter.WriteLine($"{DateTime.Now:MM/dd/yyyy hh:mm:ss.fff} - Calling {nameof(this.Purge)}() " + log);
+            this.textWriter.WriteLine($"{DateTime.Now:MM/dd/yyyy hh:mm:ss.fff} - Calling {name}() " + log);
 
             var result = func();
 
-            this.textWriter.WriteLine($"{DateTime.Now:MM/dd/yyyy hh:mm:ss.fff} - {nameof(this.Purge)}() returned '{result}'");
+            this.textWriter.WriteLine($"{DateTime.Now:MM/dd/yyyy hh:mm:ss.fff} - {name}() returned '{result}'");
 
             return result;
         }

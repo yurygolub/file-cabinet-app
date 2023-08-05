@@ -12,14 +12,7 @@
 
         public virtual AppCommandRequest Handle(AppCommandRequest request)
         {
-            if (this.nextHandler != null)
-            {
-                return this.nextHandler.Handle(request);
-            }
-            else
-            {
-                return null;
-            }
+            return this.nextHandler?.Handle(request);
         }
     }
 }

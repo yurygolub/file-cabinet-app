@@ -62,11 +62,11 @@ namespace FileCabinetApp
                 var parameters = inputs.Length > 1 ? inputs[parametersIndex] : string.Empty;
                 handler.Handle(new AppCommandRequest() { Command = command, Parameters = parameters });
 
-                textWriter.Flush();
+                textWriter?.Flush();
             }
             while (isRunning);
 
-            textWriter.Dispose();
+            textWriter?.Dispose();
         }
 
         public static void InputRecord(out RecordParameterObject record)
